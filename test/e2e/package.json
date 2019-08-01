@@ -1,0 +1,17 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "dependencies": {
+    "@rungsikorn/starman": "^0.0.7",
+    "commander": "^2.20.0",
+    "newman": "^4.5.1",
+    "newman-reporter-html": "^1.0.3",
+    "xid-js": "^1.0.1"
+  }
+}

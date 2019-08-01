@@ -1,0 +1,33 @@
+{
+ "name": "shio-go",
+ "values": [
+  {
+   "key": "APIEndpoint",
+   "value": "http://localhost:30001",
+   "description": {
+    "content": "",
+    "type": "text/plain"
+   },
+   "enabled": true
+  },
+  {
+   "key": "LineChatWebhook",
+   "value": "/chat/line",
+   "description": {
+    "content": "",
+    "type": "text/plain"
+   },
+   "enabled": true
+  },
+  {
+   "key": "LineIgnoreSignature",
+   "value": true,
+   "description": {
+    "content": "",
+    "type": "text/plain"
+   },
+   "enabled": true
+  }
+ ],
+ "id": "bcd28ee2-5a3c-42bd-8f47-77cfcf213d20"
+}

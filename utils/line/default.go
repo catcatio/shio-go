@@ -37,7 +37,7 @@ func parse(channelSecret string, r *http.Request) (events []*linebot.Event, dest
 		return
 	}
 
-	if len(r.Header.Get("x-shio-debug")) <= 0 && !validateSignature(channelSecret, r.Header.Get("X-Line-Signature"), body) {
+	if r.Header.Get("x-shio-debug") != "true" && !validateSignature(channelSecret, r.Header.Get("X-Line-Signature"), body) {
 		err = linebot.ErrInvalidSignature
 		return
 	}

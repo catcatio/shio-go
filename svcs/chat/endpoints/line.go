@@ -1,9 +1,9 @@
 package endpoints
 
 import (
-	"context"
 	"fmt"
 	"github.com/catcatio/shio-go/nub"
+	shio "github.com/catcatio/shio-go/pkg"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
 	"github.com/catcatio/shio-go/svcs/chat/usecases"
 	"github.com/line/line-bot-sdk-go/linebot"
@@ -25,7 +25,8 @@ func isSystemMessage(event *linebot.Event) bool {
 
 func NewLineWebhookEndpointFunc(line usecases.Line) EndpointFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log := logger.New("endpoint").WithRequestID(nub.NewID())
+		reqID := nub.NewID()
+		log := logger.New("endpoint").WithServiceInfo("webhook").WithRequestID(reqID)
 		events, _, err := line.RequestParser().Parse(r)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -34,14 +35,22 @@ func NewLineWebhookEndpointFunc(line usecases.Line) EndpointFunc {
 			return
 		}
 
-		ctx := context.Background()
+		if len(events) <= 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("err: %s", http.StatusText(http.StatusBadRequest))
+			_, _ = fmt.Fprintf(w, msg)
+			log.Error(msg)
+			return
+		}
+
+		ctx := shio.NewContextWithRequestID(reqID)
 		le := make([]entities.Event, 0)
 		for _, e := range events {
 			if isSystemMessage(e) {
 				log.Infof("system message received")
 				w.WriteHeader(http.StatusOK)
 				_, _ = fmt.Fprintf(w, "%s", "OK")
-				return
+				return // response and return
 			}
 
 			le = append(le, &entities.LineEvent{Event: e})

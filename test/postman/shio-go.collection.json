@@ -1,0 +1,96 @@
+{
+ "info": {
+  "name": "shio-go",
+  "descriptions": "",
+  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+ },
+ "item": [
+  {
+   "name": "events",
+   "item": [
+    {
+     "name": "send empty event",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "((pm) => {\n        pm.test('should return 400', function () {\n            pm.response.to.have.status(parseInt('400', 10));\n            if ('err: Bad Request') {\n                pm.expect(pm.response.text()).to.equal('err: Bad Request')\n            }\n        });\n    })(pm);"
+        ]
+       }
+      },
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "(() => {})(pm);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "url": "{{APIEndpoint}}{{LineChatWebhook}}",
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-shio-debug",
+        "value": "{{LineIgnoreSignature}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"events\":[]}"
+      }
+     }
+    },
+    {
+     "name": "send system event",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "((pm) => {\n        pm.test('should return 200', function () {\n            pm.response.to.have.status(parseInt('200', 10));\n            if ('OK') {\n                pm.expect(pm.response.text()).to.equal('OK')\n            }\n        });\n    })(pm);"
+        ]
+       }
+      },
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "(() => {})(pm);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "url": "{{APIEndpoint}}{{LineChatWebhook}}",
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-shio-debug",
+        "value": "{{LineIgnoreSignature}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"events\":[{\"replyToken\":\"00000000000000000000000000000000\",\"type\":\"message\",\"timestamp\":1564671242343,\"source\":{\"type\":\"user\",\"userId\":\"u206d25c2ea6bd87c17655609a1c37cb8\"},\"message\":{\"id\":\"325708\",\"type\":\"text\",\"text\":\"Hello, world\"}}]}"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

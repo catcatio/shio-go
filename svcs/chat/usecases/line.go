@@ -2,11 +2,13 @@ package usecases
 
 import (
 	"context"
-	"fmt"
 	"github.com/catcatio/shio-go/nub"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
+	"github.com/catcatio/shio-go/pkg/kernel"
 	"github.com/catcatio/shio-go/svcs/chat/repositories"
 	lu "github.com/catcatio/shio-go/utils/line"
+	"github.com/octofoxio/foundation"
+	"github.com/octofoxio/foundation/logger"
 )
 
 type Line interface {
@@ -19,10 +21,18 @@ type line struct {
 	channelAccessToken string
 	parser             lu.RequestParser
 	intent             repositories.IntentRepository
+
+	log *logger.Logger
 }
 
-func New(channelSecret string, channelAccessToken string, parser lu.RequestParser, intent repositories.IntentRepository) Line {
-	return &line{channelSecret: channelSecret, channelAccessToken: channelAccessToken, parser: parser}
+func New(lineOptions *kernel.LineChatOptions, parser lu.RequestParser, intent repositories.IntentRepository) Line {
+	return &line{
+		channelSecret:      lineOptions.ChannelSecret,
+		channelAccessToken: lineOptions.ChannelAccessToken,
+		parser:             parser,
+		intent:             intent,
+		log:                logger.New("LineUsecase"),
+	}
 }
 
 func (l *line) RequestParser() lu.RequestParser {
@@ -31,18 +41,18 @@ func (l *line) RequestParser() lu.RequestParser {
 }
 
 func (l *line) HandleIncomingEvents(ctx context.Context, in *WebhookInput) (err error) {
-	fmt.Println(in.Provider)
-	fmt.Println(in.Events)
+	log := l.log.WithServiceInfo("HandleIncomingEvents").WithRequestID(foundation.GetRequestIDFromContext(ctx))
+	log.Infof("%d incoming event(s) from %s", len(in.Events), in.Provider)
 
 	parsedEvents := make([]*entities.ParsedEvent, 0)
 
 	for _, e := range in.Events {
-		//intent, err := l.intent.Detect(e.GetMessage())
-		//
-		//if err != nil {
-		//	intent = nil
-		//	fmt.Println(err)
-		//}
+		intent, err := l.intent.Detect(ctx, e.GetMessage(), "en")
+
+		if err != nil {
+			intent = nil
+			log.Println(err)
+		}
 
 		parsedEvent := &entities.ParsedEvent{
 			RequestID:    nub.NewID(),
@@ -52,13 +62,13 @@ func (l *line) HandleIncomingEvents(ctx context.Context, in *WebhookInput) (err 
 			TimeStamp:    e.GetTimestamp(),
 			Source:       e.GetSource(),
 			Original:     e.GetOriginalEvent(),
-			//Intent:       intent,
+			Intent:       intent,
 		}
 
 		parsedEvents = append(parsedEvents, parsedEvent)
 	}
 
-	fmt.Println(parsedEvents)
+	log.Println(parsedEvents)
 	return nil
 }
 

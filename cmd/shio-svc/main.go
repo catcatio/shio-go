@@ -1,36 +1,63 @@
 package main
 
 import (
-	"fmt"
-	"github.com/catcatio/shio-go/svcs/chat"
-	"github.com/gorilla/handlers"
+	"github.com/catcatio/shio-go/cmd/shio-svc/starter"
+	"github.com/catcatio/shio-go/pkg/kernel"
 	"github.com/octofoxio/foundation"
 	"github.com/octofoxio/foundation/logger"
-	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
-func main() {
-	log := logger.New("shio-svc")
-	log.Println("hurray !!!")
-	httpHost := foundation.EnvString("HOST", "localhost")
-	httpPort := foundation.EnvString("PORT", "3001")
-	channelSecret := foundation.EnvStringOrPanic("LINE_CHANNEL_SECRET")
-	channelAccessToken := foundation.EnvStringOrPanic("LINE_ACCESS_TOKEN")
-
-	_, httpHandler := chat.Initializer(channelSecret, channelAccessToken)
-
-	loggedRouter := handlers.LoggingHandler(&localLogger{log: log}, httpHandler)
-	err := http.ListenAndServe(fmt.Sprintf("%s:%s", httpHost, httpPort), loggedRouter)
-	if err != nil {
-		panic(err)
+func loadOptions(platform string) *kernel.ServiceOptions {
+	switch platform {
+	default:
+		return starter.LoadLocalOptions()
 	}
 }
 
-type localLogger struct {
-	log *logger.Logger
+type stopper interface {
+	Stop()
 }
 
-func (l *localLogger) Write(p []byte) (n int, err error) {
-	l.log.Info(string(p))
-	return len(p), nil
+func main() {
+	log := logger.New("shio-svc").WithServiceInfo("main")
+	log.Println("hurray !!!")
+
+	platform := foundation.EnvString("PLATFORM", "local")
+	httpHost := foundation.EnvString("HOST", "localhost")
+	httpPort := foundation.EnvString("PORT", "30001")
+
+	log.Printf("using platform: %s", platform)
+	serviceOptions := loadOptions(platform)
+
+	s := &starter.Starter{
+		Host:    httpHost,
+		Port:    httpPort,
+		Options: serviceOptions,
+		Log:     log,
+	}
+
+	service := s.Start()
+	// gracefully stop service
+	gracefullyStop(log, service)
+}
+
+func gracefullyStop(log *logger.Logger, stopper stopper) {
+	gracefullyClosed := make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, syscall.SIGTERM)
+		signal.Notify(sigint, syscall.SIGINT)
+		sig := <-sigint
+
+		log.Printf("🤷 🤷 ‍system signal received: %s", sig.String())
+		// stop service
+		log.Info("stopping services")
+		stopper.Stop()
+		close(gracefullyClosed)
+	}()
+	<-gracefullyClosed
+	log.Info("🙋 🙋 bye")
 }
