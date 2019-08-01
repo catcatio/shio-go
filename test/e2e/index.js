@@ -6,7 +6,8 @@ const commander = require('commander');
 let postmanEnvironmentForFixtures = ({
     APIEndpoint: "http://localhost:30001",
     LineChatWebhook: "/chat/line",
-    LineIgnoreSignature: true
+    LineIgnoreSignature: true,
+    LineSenderID: "U91eeaf62d901234567890123456789ab",
 })
 
 const start = () => {

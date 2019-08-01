@@ -1,4 +1,4 @@
-const {followEvent} = require('./lineEvents')
+const {followEvent, textMessageEvent} = require('./lineEvents')
 const {StarmanRequestStep} = require('@rungsikorn/starman')
 const expectation = require('./expect')
 
@@ -13,16 +13,18 @@ const sendEvents = (options, ...events) => {
         .AddTest(options.expect || expectation.Nothing)
 }
 
-const sendFollowEvent = (options, userId) => {
+const sendFollowEvent = (options, userId = undefined) => {
     options.name = options.name || "send follow event"
     return sendEvents(Object.assign(options), followEvent(userId))
-        .AddTest((pm) => {
-            pm.response.to.have.status(200)
-            console.log(pm.response)
-        })
+}
+
+const sendTextMessageEvent = (options, message) => {
+    options.name = options.name || "send text message event"
+    return sendEvents(Object.assign(options), textMessageEvent(message))
 }
 
 module.exports = {
     sendEvents,
     sendFollowEvent,
+    sendTextMessageEvent,
 }

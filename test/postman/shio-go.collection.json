@@ -86,7 +86,89 @@
       ],
       "body": {
        "mode": "raw",
-       "raw": "{\"events\":[{\"replyToken\":\"00000000000000000000000000000000\",\"type\":\"message\",\"timestamp\":1564671242343,\"source\":{\"type\":\"user\",\"userId\":\"u206d25c2ea6bd87c17655609a1c37cb8\"},\"message\":{\"id\":\"325708\",\"type\":\"text\",\"text\":\"Hello, world\"}}]}"
+       "raw": "{\"events\":[{\"replyToken\":\"00000000000000000000000000000000\",\"type\":\"message\",\"timestamp\":1564682847274,\"source\":{\"type\":\"user\",\"userId\":\"{{LineSenderID}}\"},\"message\":{\"id\":\"325708\",\"type\":\"text\",\"text\":\"Hello, world\"}}]}"
+      }
+     }
+    },
+    {
+     "name": "send follow event",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "((pm) => {\n        pm.test('should return 200', function () {\n            pm.response.to.have.status(parseInt('200', 10));\n            if ('OK') {\n                pm.expect(pm.response.text()).to.equal('OK')\n            }\n        });\n    })(pm);"
+        ]
+       }
+      },
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "(() => {})(pm);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "url": "{{APIEndpoint}}{{LineChatWebhook}}",
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-shio-debug",
+        "value": "{{LineIgnoreSignature}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"events\":[{\"replyToken\":\"bn1jmqtkkjwa1m6ewbag\",\"type\":\"follow\",\"timestamp\":1564682847274,\"source\":{\"type\":\"user\",\"userId\":\"{{LineSenderID}}\"}}]}"
+      }
+     }
+    },
+    {
+     "name": "send text event",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "((pm) => {\n        pm.test('should return 200', function () {\n            pm.response.to.have.status(parseInt('200', 10));\n            if ('OK') {\n                pm.expect(pm.response.text()).to.equal('OK')\n            }\n        });\n    })(pm);"
+        ]
+       }
+      },
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "(() => {})(pm);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "url": "{{APIEndpoint}}{{LineChatWebhook}}",
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "x-shio-debug",
+        "value": "{{LineIgnoreSignature}}"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"events\":[{\"replyToken\":\"bn1jmqtkkjwa1m6ewbb0\",\"type\":\"message\",\"timestamp\":1564682847275,\"source\":{\"type\":\"user\",\"userId\":\"{{LineSenderID}}\"},\"message\":{\"id\":\"1564682847275\",\"type\":\"text\",\"text\":\"buy  count\"}}]}"
       }
      }
     }

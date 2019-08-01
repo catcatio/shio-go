@@ -17,6 +17,8 @@ const optionsExpectOK = (options) => {
 module.exports = function (runner) {
     return runner("events", [
         lineFixtures.sendEvents(optionsExpectBadRequest({name: "send empty event"})),
-        lineFixtures.sendEvents(optionsExpectOK({name: "send system event"}), lineEvents.systemEvent())
+        lineFixtures.sendEvents(optionsExpectOK({name: "send system event"}), lineEvents.systemEvent()),
+        lineFixtures.sendFollowEvent(optionsExpectOK({name: "send follow event"})),
+        lineFixtures.sendTextMessageEvent(optionsExpectOK({name: "send text event"}), "buy  count")
     ])
 }

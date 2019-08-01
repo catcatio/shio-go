@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/catcatio/shio-go/nub"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
 	"github.com/catcatio/shio-go/pkg/kernel"
@@ -47,11 +48,15 @@ func (l *line) HandleIncomingEvents(ctx context.Context, in *WebhookInput) (err 
 	parsedEvents := make([]*entities.ParsedEvent, 0)
 
 	for _, e := range in.Events {
-		intent, err := l.intent.Detect(ctx, e.GetMessage(), "en")
+		intent, err := l.intent.Detect(ctx, e.GetMessage(), e.GetSource().UserID, "en")
+		if err == repositories.ErrMessageTypeNotSupported {
 
-		if err != nil {
+			log.Infof("indent detector does not support message type '%s'", e.GetMessage().GetType())
+		} else if err != nil {
 			intent = nil
-			log.Println(err)
+			log.WithError(err).Error("detect intent failed")
+		} else {
+			log.Info("detect intent completed")
 		}
 
 		parsedEvent := &entities.ParsedEvent{
@@ -65,10 +70,18 @@ func (l *line) HandleIncomingEvents(ctx context.Context, in *WebhookInput) (err 
 			Intent:       intent,
 		}
 
+		if intent != nil {
+			b, _ := json.Marshal(intent)
+			log.Println(string(b))
+		}
+
+		c, _ := json.Marshal(parsedEvent)
+		log.Println(string(c))
 		parsedEvents = append(parsedEvents, parsedEvent)
+
+		// TODO: send to fulfillment
 	}
 
-	log.Println(parsedEvents)
 	return nil
 }
 

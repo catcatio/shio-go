@@ -27,6 +27,15 @@
     "type": "text/plain"
    },
    "enabled": true
+  },
+  {
+   "key": "LineSenderID",
+   "value": "U91eeaf62d901234567890123456789ab",
+   "description": {
+    "content": "",
+    "type": "text/plain"
+   },
+   "enabled": true
   }
  ],
  "id": "bcd28ee2-5a3c-42bd-8f47-77cfcf213d20"

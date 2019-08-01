@@ -36,8 +36,10 @@ const (
 )
 
 type Intent struct {
-	Name       string     `json:"name"`
-	Parameters Parameters `json:"parameters"`
+	Name                     string     `json:"name"`
+	Parameters               Parameters `json:"parameters"`
+	FulfillmentText          string     `json:"fulfillment_text,omitempty"`
+	AllRequiredParamsPresent bool       `json:"all_required_params_present"`
 }
 
 type Fulfillment struct {

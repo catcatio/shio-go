@@ -10,7 +10,7 @@ const systemEvent = () => ({
     "timestamp": Date.now(),
     "source": {
         "type": "user",
-        "userId": "u206d25c2ea6bd87c17655609a1c37cb8"
+        "userId": "{{LineSenderID}}"
     },
     "message": {
         "id": "325708",
@@ -25,11 +25,27 @@ const followEvent = (userId, replyToken = undefined) => ({
     "timestamp": Date.now(),
     "source": {
         "type": "user",
-        "userId": userId
+        "userId": userId || "{{LineSenderID}}"
+    }
+})
+
+const textMessageEvent = (message, userId, replyToken = undefined) => ({
+    "replyToken": replyToken || newToken(),
+    "type": "message",
+    "timestamp": Date.now(),
+    "source": {
+        "type": "user",
+        "userId": userId || "{{LineSenderID}}"
+    },
+    "message": {
+        "id": `${Date.now()}`,
+        "type": "text",
+        "text": message
     }
 })
 
 module.exports = {
     systemEvent,
-    followEvent
+    followEvent,
+    textMessageEvent
 }
