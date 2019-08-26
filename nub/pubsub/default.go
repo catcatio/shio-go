@@ -24,3 +24,7 @@ func NewClientWithCredentials(ctx context.Context, projectID string, credentials
 func NewClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
 	return pubsub.NewClient(ctx, projectID)
 }
+
+func NewDefaultClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
+	return pubsub.NewClient(ctx, projectID)
+}

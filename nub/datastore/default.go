@@ -24,3 +24,7 @@ func NewClientWithCredentials(ctx context.Context, projectID string, credentials
 func Newlient(ctx context.Context, projectID string) (*datastore.Client, error) {
 	return datastore.NewClient(ctx, projectID)
 }
+
+func NewDefaultClient(ctx context.Context, projectID string) (*datastore.Client, error) {
+	return datastore.NewClient(ctx, projectID)
+}

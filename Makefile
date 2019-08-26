@@ -17,3 +17,6 @@ prepare:
 
 gen-proto:
 	prototool generate
+
+release-webhook-dev:
+	cd cmd/bot-webhook-fn && go mod vendor && gcloud beta functions deploy bot-webhook --project shio-go-dev --entry-point Webhook --runtime go111 --trigger-http --region asia-east2 --verbosity=debug
