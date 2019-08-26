@@ -20,6 +20,15 @@
    "enabled": true
   },
   {
+   "key": "ChatChannelID",
+   "value": "too-bright",
+   "description": {
+    "content": "",
+    "type": "text/plain"
+   },
+   "enabled": true
+  },
+  {
    "key": "LineIgnoreSignature",
    "value": true,
    "description": {

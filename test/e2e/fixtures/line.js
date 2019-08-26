@@ -7,7 +7,7 @@ const sendEvents = (options, ...events) => {
     return new StarmanRequestStep(options.name || 'Send events')
         .AddHeader('Content-Type', 'application/json')
         .AddHeader('x-shio-debug', "{{LineIgnoreSignature}}")
-        .Post(`{{APIEndpoint}}{{LineChatWebhook}}`)
+        .Post(`{{APIEndpoint}}{{LineChatWebhook}}/{{ChatChannelID}}`)
         .AddBody(reqBody)
         .AddPreRequest(options.preRequest || expectation.Nothing)
         .AddTest(options.expect || expectation.Nothing)

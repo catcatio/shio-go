@@ -1,6 +1,7 @@
 package transports
 
 import (
+	"fmt"
 	"github.com/catcatio/shio-go/svcs/chat/endpoints"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -8,7 +9,7 @@ import (
 
 func NewHttpServer(eps *endpoints.Endpoints) http.Handler {
 	m := mux.NewRouter()
-	m.HandleFunc("/chat/line", eps.LineWebhook).
+	m.HandleFunc(fmt.Sprintf("/chat/{%s}/{%s}", endpoints.ParamProvider, endpoints.ParamChannelID), eps.Webhook).
 		Methods("POST")
 	m.HandleFunc("/_ping", eps.Ping).
 		Methods("GET")

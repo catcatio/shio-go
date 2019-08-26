@@ -16,7 +16,7 @@
        "script": {
         "type": "text/javascript",
         "exec": [
-         "((pm) => {\n        pm.test('should return 400', function () {\n            pm.response.to.have.status(parseInt('400', 10));\n            if ('err: Bad Request') {\n                pm.expect(pm.response.text()).to.equal('err: Bad Request')\n            }\n        });\n    })(pm);"
+         "((pm) => {\n        pm.test('should return 400', function () {\n            pm.response.to.have.status(parseInt('400', 10));\n            if ('Bad Request') {\n                pm.expect(pm.response.text()).to.equal('Bad Request')\n            }\n        });\n    })(pm);"
         ]
        }
       },
@@ -31,7 +31,7 @@
       }
      ],
      "request": {
-      "url": "{{APIEndpoint}}{{LineChatWebhook}}",
+      "url": "{{APIEndpoint}}{{LineChatWebhook}}/{{ChatChannelID}}",
       "method": "POST",
       "header": [
        {
@@ -72,7 +72,7 @@
       }
      ],
      "request": {
-      "url": "{{APIEndpoint}}{{LineChatWebhook}}",
+      "url": "{{APIEndpoint}}{{LineChatWebhook}}/{{ChatChannelID}}",
       "method": "POST",
       "header": [
        {
@@ -86,7 +86,7 @@
       ],
       "body": {
        "mode": "raw",
-       "raw": "{\"events\":[{\"replyToken\":\"00000000000000000000000000000000\",\"type\":\"message\",\"timestamp\":1564682847274,\"source\":{\"type\":\"user\",\"userId\":\"{{LineSenderID}}\"},\"message\":{\"id\":\"325708\",\"type\":\"text\",\"text\":\"Hello, world\"}}]}"
+       "raw": "{\"events\":[{\"replyToken\":\"00000000000000000000000000000000\",\"type\":\"message\",\"timestamp\":1565342055668,\"source\":{\"type\":\"user\",\"userId\":\"{{LineSenderID}}\"},\"message\":{\"id\":\"325708\",\"type\":\"text\",\"text\":\"Hello, world\"}}]}"
       }
      }
     },
@@ -113,7 +113,7 @@
       }
      ],
      "request": {
-      "url": "{{APIEndpoint}}{{LineChatWebhook}}",
+      "url": "{{APIEndpoint}}{{LineChatWebhook}}/{{ChatChannelID}}",
       "method": "POST",
       "header": [
        {
@@ -127,7 +127,7 @@
       ],
       "body": {
        "mode": "raw",
-       "raw": "{\"events\":[{\"replyToken\":\"bn1jmqtkkjwa1m6ewbag\",\"type\":\"follow\",\"timestamp\":1564682847274,\"source\":{\"type\":\"user\",\"userId\":\"{{LineSenderID}}\"}}]}"
+       "raw": "{\"events\":[{\"replyToken\":\"bn6kjsvkkjw6askbz0j0\",\"type\":\"follow\",\"timestamp\":1565342055669,\"source\":{\"type\":\"user\",\"userId\":\"{{LineSenderID}}\"}}]}"
       }
      }
     },
@@ -154,7 +154,7 @@
       }
      ],
      "request": {
-      "url": "{{APIEndpoint}}{{LineChatWebhook}}",
+      "url": "{{APIEndpoint}}{{LineChatWebhook}}/{{ChatChannelID}}",
       "method": "POST",
       "header": [
        {
@@ -168,7 +168,7 @@
       ],
       "body": {
        "mode": "raw",
-       "raw": "{\"events\":[{\"replyToken\":\"bn1jmqtkkjwa1m6ewbb0\",\"type\":\"message\",\"timestamp\":1564682847275,\"source\":{\"type\":\"user\",\"userId\":\"{{LineSenderID}}\"},\"message\":{\"id\":\"1564682847275\",\"type\":\"text\",\"text\":\"buy  count\"}}]}"
+       "raw": "{\"events\":[{\"replyToken\":\"bn6kjsvkkjw6askbz0jg\",\"type\":\"message\",\"timestamp\":1565342055669,\"source\":{\"type\":\"user\",\"userId\":\"{{LineSenderID}}\"},\"message\":{\"id\":\"1565342055669\",\"type\":\"text\",\"text\":\"buy  count\"}}]}"
       }
      }
     }

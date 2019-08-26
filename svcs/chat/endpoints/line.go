@@ -1,11 +1,11 @@
 package endpoints
 
 import (
-	"fmt"
-	"github.com/catcatio/shio-go/nub"
-	shio "github.com/catcatio/shio-go/pkg"
+	"context"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
+	chatentities "github.com/catcatio/shio-go/svcs/chat/entities"
 	"github.com/catcatio/shio-go/svcs/chat/usecases"
+	lineutils "github.com/catcatio/shio-go/utils/line"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/octofoxio/foundation/logger"
 	"net/http"
@@ -23,52 +23,70 @@ func isSystemMessage(event *linebot.Event) bool {
 	return event.ReplyToken == "00000000000000000000000000000000" || event.ReplyToken == "ffffffffffffffffffffffffffffffff"
 }
 
-func NewLineWebhookEndpointFunc(line usecases.Line) EndpointFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		reqID := nub.NewID()
-		log := logger.New("endpoint").WithServiceInfo("webhook").WithRequestID(reqID)
-		events, _, err := line.RequestParser().Parse(r)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = fmt.Fprintf(w, "err: %s", err.Error())
-			log.WithError(err).Error("line.RequestParser failed")
+func newLineEndpointFunc(chat usecases.Chat, line usecases.Line) ProviderEndpointFunc {
+	return func(ctx context.Context, options *chatentities.ChannelConfig, w http.ResponseWriter, r *http.Request) {
+		log := logger.New("newLineEndpointFunc")
+		lineOptions := options.LineChatOptions
+		requestParser := lineutils.NewParser(lineOptions.ChannelSecret)
+
+		// parse events and validate signature
+		events, _, err := requestParser.Parse(r)
+		if err == lineutils.ErrInvalidSignature {
+			writeBadRequest(w)
+			log.WithError(err).Error("validation failed")
+			return
+		} else if err != nil {
+			writeErrorResponse(w, err.Error())
+			log.WithError(err).Error("parse events failed")
 			return
 		}
 
 		if len(events) <= 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			msg := fmt.Sprintf("err: %s", http.StatusText(http.StatusBadRequest))
-			_, _ = fmt.Fprintf(w, msg)
-			log.Error(msg)
+			log.Error("empty event, just stop")
+			writeBadRequest(w)
 			return
 		}
 
-		ctx := shio.NewContextWithRequestID(reqID)
-		le := make([]entities.Event, 0)
+		le := make([]*entities.IncomingEvent, 0)
 		for _, e := range events {
 			if isSystemMessage(e) {
 				log.Infof("system message received")
-				w.WriteHeader(http.StatusOK)
-				_, _ = fmt.Fprintf(w, "%s", "OK")
+				writeOKResponse(w)
 				return // response and return
 			}
 
-			le = append(le, &entities.LineEvent{Event: e})
+			profile, err := line.GetUserProfile(ctx, options.LineChatOptions.ChannelSecret, options.LineChatOptions.ChannelAccessToken, e.Source.UserID)
+			if err != nil {
+				log.WithError(err).Errorf("get user's profile %s failed", e.Source.UserID)
+				profile = &entities.UserProfile{
+					ID: e.Source.UserID,
+				}
+			}
+
+			le = append(le, (&entities.LineEvent{Event: e}).IncomingEvent(profile))
 		}
 
-		err = line.HandleIncomingEvents(ctx, &usecases.WebhookInput{
-			Provider: entities.ProviderTypeLine,
-			Events:   le,
-		})
+		// just return 200 OK, handle the rest internally
+		writeOKResponse(w)
 
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = fmt.Fprintf(w, "err: %s", err.Error())
-			log.WithError(err).Error("handle incoming events failed")
-			return
-		}
+		// pass events to handler
+		go func(ctx context.Context, log *logger.Logger) {
+			defer func() {
+				var r interface{}
+				if r = recover(); r == nil {
+					return
+				}
 
-		w.WriteHeader(http.StatusOK)
-		_, _ = fmt.Fprintf(w, "OK")
+				if e, ok := r.(error); ok {
+					log.WithError(e).Error("panic occurred")
+				}
+			}()
+			err = chat.HandleIncomingEvents(ctx,
+				&chatentities.WebhookInput{
+					Provider:  entities.ProviderTypeLine,
+					ChannelID: options.ID,
+					Events:    le,
+				})
+		}(ctx, log)
 	}
 }

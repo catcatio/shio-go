@@ -5,9 +5,14 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"io/ioutil"
 	"net/http"
+)
+
+var (
+	ErrInvalidSignature = errors.New("invalid signature")
 )
 
 type requestParser struct {
@@ -38,7 +43,7 @@ func parse(channelSecret string, r *http.Request) (events []*linebot.Event, dest
 	}
 
 	if r.Header.Get("x-shio-debug") != "true" && !validateSignature(channelSecret, r.Header.Get("X-Line-Signature"), body) {
-		err = linebot.ErrInvalidSignature
+		err = ErrInvalidSignature
 		return
 	}
 

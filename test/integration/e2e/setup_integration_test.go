@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-var options = test.IntegrationTestOption{
+var options = &test.IntegrationTestOption{
 	Host: "localhost",
 	Port: "30001",
 }
 
 func TestMain(m *testing.M) {
-
+	test.IntegrationTestSetup(m, options)
 }

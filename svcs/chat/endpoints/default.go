@@ -1,28 +1,33 @@
 package endpoints
 
 import (
-	"fmt"
+	"context"
+	"github.com/catcatio/shio-go/svcs/chat/entities"
 	"github.com/catcatio/shio-go/svcs/chat/usecases"
 	"net/http"
 )
 
 type EndpointFunc func(w http.ResponseWriter, r *http.Request)
+type ProviderEndpointHandlers map[string]ProviderEndpointFunc
+type ProviderEndpointFunc func(ctx context.Context, options *entities.ChannelConfig, w http.ResponseWriter, r *http.Request)
 
 type Endpoints struct {
-	LineWebhook EndpointFunc
-	Ping        EndpointFunc
+	Webhook EndpointFunc
+	Ping    EndpointFunc
 }
 
-func NewPingEndpoint() EndpointFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = fmt.Fprint(w, "_pong")
+var (
+	ParamChannelID = "channelid"
+	ParamProvider  = "provider"
+)
+
+func New(chat usecases.Chat, line usecases.Line) *Endpoints {
+	handlers := ProviderEndpointHandlers{
+		"line": newLineEndpointFunc(chat, line),
 	}
-}
 
-func New(line usecases.Line) *Endpoints {
 	return &Endpoints{
-		LineWebhook: NewLineWebhookEndpointFunc(line),
-		Ping:        NewPingEndpoint(),
+		Webhook: newWebHookEndpoint(chat, handlers),
+		Ping:    newPingEndpoint(),
 	}
 }

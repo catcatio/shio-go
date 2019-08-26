@@ -6,20 +6,24 @@ import (
 	"github.com/catcatio/shio-go/svcs/chat/repositories"
 	"github.com/catcatio/shio-go/svcs/chat/transports"
 	"github.com/catcatio/shio-go/svcs/chat/usecases"
-	lineUtil "github.com/catcatio/shio-go/utils/line"
+	"github.com/octofoxio/foundation/logger"
 	"google.golang.org/grpc"
 	"net/http"
 )
 
-func Initializer(serviceOptions *kernel.ServiceOptions) (*grpc.Server, http.Handler) {
-	lineOptions := serviceOptions.LineChatOptions
-	dialogflowOptions := serviceOptions.DialogflowOptions
+func Initializer(options *kernel.ServiceOptions) (*grpc.Server, http.Handler) {
+	log := logger.New("chatsvc").WithServiceInfo("Initializer")
+	log.Debug("enter")
+	defer log.Debug("exit")
 
-	parser := lineUtil.NewParser(lineOptions.ChannelSecret)
-	intentRepo := repositories.NewDialogflowIntentRepository(dialogflowOptions.ProjectName, dialogflowOptions.CredentialJson)
+	incomingRepo := repositories.NewIncomingEventRepository(options.PubsubClient)
+	channelOptions := repositories.NewChannelOptionsRepository(options.DatastoreClient)
+	userProfileRepo := repositories.NewUserProfileRepository(options.DatastoreClient)
+	lineRepo := repositories.NewLineRepository()
 
-	line := usecases.New(lineOptions, parser, intentRepo)
-	eps := endpoints.New(line)
+	line := usecases.NewLine(userProfileRepo, lineRepo)
+	chat := usecases.NewChat(incomingRepo, channelOptions)
+	eps := endpoints.New(chat, line)
 	httpHandler := transports.NewHttpServer(eps)
 
 	return nil, httpHandler

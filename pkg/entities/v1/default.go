@@ -35,6 +35,14 @@ const (
 	ProviderTypeUnknown ProviderType = "unknown"
 )
 
+func (p *ProviderType) String() string {
+	if p == nil {
+		return ""
+	}
+
+	return string(*p)
+}
+
 type Intent struct {
 	Name                     string     `json:"name"`
 	Parameters               Parameters `json:"parameters"`
@@ -57,13 +65,23 @@ type Source struct {
 type OutgoingEvent struct {
 }
 
-type Event interface {
-	GetMessage() Message
-	GetReplyToken() string
-	GetTimestamp() time.Time
-	GetSource() *Source
-	GetProvider() ProviderType
-	GetOriginalEvent() interface{}
+type event interface {
+	getMessage() Message
+	getReplyToken() string
+	getTimestamp() time.Time
+	getSource() *Source
+	getProvider() ProviderType
+	getOriginalEvent() interface{}
+}
+
+type IncomingEvent struct {
+	Message     Message
+	ReplyToken  string
+	TimeStamp   time.Time
+	Source      *Source
+	Provider    ProviderType
+	UserProfile *UserProfile
+	Original    interface{}
 }
 
 type ParsedEvent struct {
@@ -81,5 +99,5 @@ type ParsedEvent struct {
 type UserProfile struct {
 	ID          string
 	DisplayName string
-	PictureUrl  *string
+	PictureUrl  string
 }

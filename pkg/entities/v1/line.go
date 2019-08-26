@@ -10,19 +10,19 @@ type LineEvent struct {
 	*linebot.Event
 }
 
-func (l *LineEvent) GetMessage() Message {
+func (l *LineEvent) getMessage() Message {
 	return makeMessage(l.Event)
 }
 
-func (l *LineEvent) GetReplyToken() string {
+func (l *LineEvent) getReplyToken() string {
 	return l.ReplyToken
 }
 
-func (l *LineEvent) GetTimestamp() time.Time {
+func (l *LineEvent) getTimestamp() time.Time {
 	return l.Timestamp
 }
 
-func (l *LineEvent) GetSource() *Source {
+func (l *LineEvent) getSource() *Source {
 	switch l.Source.Type {
 	case linebot.EventSourceTypeGroup:
 		return &Source{
@@ -45,11 +45,11 @@ func (l *LineEvent) GetSource() *Source {
 	}
 }
 
-func (l *LineEvent) GetProvider() ProviderType {
+func (l *LineEvent) getProvider() ProviderType {
 	return ProviderTypeLine
 }
 
-func (l *LineEvent) GetOriginalEvent() interface{} {
+func (l *LineEvent) getOriginalEvent() interface{} {
 	return *l
 }
 
@@ -193,5 +193,17 @@ func makeMessage(event *linebot.Event) Message {
 			Type:       MessageTypeUnknown,
 			Parameters: Parameters{},
 		}
+	}
+}
+
+func (l *LineEvent) IncomingEvent(profile *UserProfile) *IncomingEvent {
+	return &IncomingEvent{
+		l.getMessage(),
+		l.getReplyToken(),
+		l.getTimestamp(),
+		l.getSource(),
+		l.getProvider(),
+		profile,
+		l.getOriginalEvent(),
 	}
 }

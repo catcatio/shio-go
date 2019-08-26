@@ -4,7 +4,7 @@ const expect = require('../fixtures/expect')
 
 const optionsExpectBadRequest = (options) => {
     options = options || {}
-    options.expect = expect.ResponseStatus(400, "err: Bad Request")
+    options.expect = expect.ResponseStatus(400, "Bad Request")
     return options
 }
 
