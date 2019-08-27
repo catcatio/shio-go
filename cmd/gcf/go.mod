@@ -1,4 +1,4 @@
-module github.com/catcatio/shio-go/cmd/bot-webhook-fn
+module github.com/catcatio/shio-go/cmd/bot-sender-fn
 
 require (
 	github.com/catcatio/shio-go v0.0.0

@@ -2,6 +2,7 @@ package chat
 
 import (
 	"github.com/catcatio/shio-go/pkg/kernel"
+	"github.com/catcatio/shio-go/pkg/transport/pubsub"
 	"github.com/catcatio/shio-go/svcs/chat/endpoints"
 	"github.com/catcatio/shio-go/svcs/chat/repositories"
 	"github.com/catcatio/shio-go/svcs/chat/transports"
@@ -12,24 +13,40 @@ import (
 )
 
 func Initializer(options *kernel.ServiceOptions) (*grpc.Server, http.Handler) {
-	log := logger.New("chatsvc").WithServiceInfo("Initializer")
-	log.Debug("enter")
-	defer log.Debug("exit")
-
-	incomingRepo := repositories.NewIncomingEventRepository(options.PubsubClient)
-	channelOptions := repositories.NewChannelOptionsRepository(options.DatastoreClient)
-	userProfileRepo := repositories.NewUserProfileRepository(options.DatastoreClient)
-	lineRepo := repositories.NewLineRepository()
-
-	line := usecases.NewLine(userProfileRepo, lineRepo)
-	chat := usecases.NewChat(incomingRepo, channelOptions)
+	chat, line := initialUsecases(options)
 	eps := endpoints.New(chat, line)
 	httpHandler := transports.NewHttpServer(eps)
 
 	return nil, httpHandler
 }
 
-func New(options *kernel.ServiceOptions) http.Handler {
+func initialUsecases(options *kernel.ServiceOptions) (chat usecases.Chat, line usecases.Line) {
+	log := logger.New("chatsvc").WithServiceInfo("initialUsecases")
+	log.Debug("enter")
+	defer log.Debug("exit")
+
+	incomingRepo := repositories.NewIncomingEventRepository(options.PubsubClient)
+	channelOptions := repositories.NewChannelOptionsRepository(options.DatastoreClient)
+	userProfileRepo := repositories.NewUserProfileRepository(options.DatastoreClient)
+	sendMessageRepo := repositories.NewSendMessageRepository(pubsub.NewClients(options.PubsubClient))
+	lineRepo := repositories.NewLineRepository()
+
+	line = usecases.NewLine(userProfileRepo, lineRepo)
+	chat = usecases.NewChat(incomingRepo, channelOptions, sendMessageRepo)
+
+	return
+}
+
+func NewWebhookHandler(options *kernel.ServiceOptions) http.Handler {
 	_, handler := Initializer(options)
 	return handler
+}
+
+func NewPubsubHandler(options *kernel.ServiceOptions) pubsub.Handler {
+	chat, line := initialUsecases(options)
+
+	handlers := endpoints.PubsubMessageHandlers{
+		"send-message-topic": endpoints.NewSendMessagePubsubEndpoint(chat, line),
+	}
+	return transports.NewPubsubServer(handlers)
 }

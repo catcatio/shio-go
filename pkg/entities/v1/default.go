@@ -57,9 +57,25 @@ type Fulfillment struct {
 
 type Source struct {
 	Type    SourceType `json:"type"`
-	UserID  string     `json:"userId,omitempty"`
-	GroupID string     `json:"groupId,omitempty"`
-	RoomID  string     `json:"roomId,omitempty"`
+	UserID  string     `json:"user_id,omitempty"`
+	GroupID string     `json:"group_id,omitempty"`
+	RoomID  string     `json:"room_id,omitempty"`
+}
+
+func (s *Source) GetUserID() string {
+	return s.UserID
+}
+
+func (s *Source) GetSourceID() string {
+	if s.GroupID != "" {
+		return s.GroupID
+	}
+
+	if s.RoomID != "" {
+		return s.RoomID
+	}
+
+	return s.UserID
 }
 
 type OutgoingEvent struct {
@@ -85,19 +101,28 @@ type IncomingEvent struct {
 }
 
 type ParsedEvent struct {
-	RequestID    string       `json:"requestId"`
-	Message      Message      `json:"message"`
-	ReplyToken   string       `json:"replyToken"`
-	TimeStamp    time.Time    `json:"timestamp"`
-	Source       *Source      `json:"source,omitempty"`
-	ProviderType ProviderType `json:"providerType"`
-	UserProfile  *UserProfile `json:"userProfile,omitempty"`
-	Original     interface{}  `json:"original"`
-	Intent       *Intent      `json:"intent"`
+	RequestID   string       `json:"request_id"`
+	Message     Message      `json:"message"`
+	ReplyToken  string       `json:"reply_token"`
+	TimeStamp   time.Time    `json:"timestamp"`
+	Source      *Source      `json:"source,omitempty"`
+	Provider    ProviderType `json:"provider"`
+	UserProfile *UserProfile `json:"user_profile,omitempty"`
+	Original    interface{}  `json:"original"`
+	Intent      *Intent      `json:"intent"`
 }
 
 type UserProfile struct {
 	ID          string
 	DisplayName string
 	PictureUrl  string
+}
+
+type SendMessageInput struct {
+	RequestID   string       `json:"request_id"`
+	ChannelID   string       `json:"channel_id"`
+	ReplyToken  string       `json:"reply_token"`
+	Provider    ProviderType `json:"provider"`
+	RecipientID string       `json:"recipient_id"`
+	Payload     interface{}  `json:"payload"`
 }

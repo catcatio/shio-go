@@ -19,4 +19,14 @@ gen-proto:
 	prototool generate
 
 release-webhook-dev:
-	cd cmd/bot-webhook-fn && go mod vendor && gcloud beta functions deploy bot-webhook --project shio-go-dev --entry-point Webhook --runtime go111 --trigger-http --region asia-east2 --verbosity=debug
+	cd cmd/gcf && go mod vendor && gcloud functions deploy webhook --project shio-go-dev --entry-point HandleRequest --runtime go111 --trigger-http --region asia-east2 --verbosity=debug
+
+release-sendmessage-dev:
+	cd cmd/gcf && go mod vendor && gcloud functions deploy sendmessage --project shio-go-dev --entry-point HandleSendMessagePubsub --runtime go111 --trigger-topic send-message-topic --region asia-east2 --verbosity=debug
+
+pubsub-topic-sendmessage:
+	gcloud pubsub topics create send-message-topic
+
+pubsub-subscription-sendmessage:
+	gcloud pubsub subscriptions create send-message-subscription --topic send-message-topic
+
