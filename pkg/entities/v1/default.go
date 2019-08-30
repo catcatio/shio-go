@@ -1,6 +1,9 @@
 package entities
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Parameters map[string]interface{}
 
@@ -78,6 +81,10 @@ func (s *Source) GetSourceID() string {
 	return s.UserID
 }
 
+func (s *Source) GetSessionID() string {
+	return fmt.Sprintf("%s-%s%s", s.UserID, s.RoomID, s.GroupID)
+}
+
 type OutgoingEvent struct {
 }
 
@@ -91,13 +98,13 @@ type event interface {
 }
 
 type IncomingEvent struct {
-	Message     Message
-	ReplyToken  string
-	TimeStamp   time.Time
-	Source      *Source
-	Provider    ProviderType
-	UserProfile *UserProfile
-	Original    interface{}
+	ChannelID  string
+	Message    Message
+	ReplyToken string
+	TimeStamp  time.Time
+	Source     *Source
+	Provider   ProviderType
+	Original   interface{}
 }
 
 type ParsedEvent struct {

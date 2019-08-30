@@ -54,7 +54,7 @@ func (l *chat) HandleIncomingEvents(ctx context.Context, in *entities.WebhookInp
 	log.Infof("%d incoming event(s) from %s", len(in.Events), in.Provider)
 
 	for _, e := range in.Events {
-		_ = l.sendMessageRepo.Send(ctx, entities2.SendMessageInput{
+		_ = l.sendMessageRepo.Send(ctx, &entities2.SendMessageInput{
 			RequestID:   nub.NewID(),
 			ChannelID:   in.ChannelID,
 			ReplyToken:  e.ReplyToken,
@@ -67,7 +67,7 @@ func (l *chat) HandleIncomingEvents(ctx context.Context, in *entities.WebhookInp
 	// TODO: get event dispatcher config by provider
 	// forward event
 	for _, e := range in.Events {
-		err := l.incomingRepo.Dispatch(ctx, entities2.IncomingEvent{})
+		err := l.incomingRepo.Dispatch(ctx, &entities2.IncomingEvent{})
 		log.Println(e)
 		if err != nil {
 			log.WithError(err).Error("dispatch event failed")

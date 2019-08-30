@@ -23,7 +23,7 @@ func isSystemMessage(event *linebot.Event) bool {
 	return event.ReplyToken == "00000000000000000000000000000000" || event.ReplyToken == "ffffffffffffffffffffffffffffffff"
 }
 
-func newLineEndpointFunc(chat usecases.Chat, line usecases.Line) ProviderEndpointFunc {
+func newLineEndpointFunc(chat usecases.Chat) ProviderEndpointFunc {
 	return func(ctx context.Context, options *chatentities.ChannelConfig, w http.ResponseWriter, r *http.Request) {
 		log := logger.New("newLineEndpointFunc")
 		lineOptions := options.LineChatOptions
@@ -55,15 +55,7 @@ func newLineEndpointFunc(chat usecases.Chat, line usecases.Line) ProviderEndpoin
 				return // response and return
 			}
 
-			profile, err := line.GetUserProfile(ctx, options.LineChatOptions.ChannelSecret, options.LineChatOptions.ChannelAccessToken, e.Source.UserID)
-			if err != nil {
-				log.WithError(err).Errorf("get user's profile %s failed", e.Source.UserID)
-				profile = &entities.UserProfile{
-					ID: e.Source.UserID,
-				}
-			}
-
-			le = append(le, (&entities.LineEvent{Event: e}).IncomingEvent(profile))
+			le = append(le, (&entities.LineEvent{Event: e}).IncomingEvent(options.ID))
 		}
 
 		// just return 200 OK, handle the rest internally

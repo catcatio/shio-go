@@ -20,9 +20,16 @@ func init() {
 }
 
 func handlePubsub(topic string, ctx context.Context, m pubsub.RawPubsubMessage) (err error) {
+	log := logger.New("handlePubsub").WithField("topic", topic)
+	if m.Data == nil {
+		err := fmt.Errorf("data is nil")
+		log.WithError(err).Error("handle pubsub failed")
+		return err
+	}
+
 	if pubsubHandler == nil {
 		err := fmt.Errorf("handler is nil")
-		logger.Default.WithServiceInfo("HandlePubsub").WithError(err).Errorf("failed to handler message")
+		log.WithServiceInfo("HandlePubsub").WithError(err).Errorf("failed to handler message")
 		return err
 	}
 
@@ -31,16 +38,19 @@ func handlePubsub(topic string, ctx context.Context, m pubsub.RawPubsubMessage) 
 			if e := r.(error); e != nil {
 				err = e
 			}
-			logger.Default.WithServiceInfo("HandlePubsub").Errorf("something wrong: %v", r)
+			log.WithServiceInfo("HandlePubsub").Errorf("something wrong: %v", r)
 		}
 	}()
 
-	logger.Default.Printf("pubsub message: %v", m.Data)
-	logger.Default.Printf("pubsub message: (string) %v", string(m.Data))
+	log.Printf("pubsub message: %v", string(m.Data))
 
 	return pubsubHandler.Serve(topic, ctx, m)
 }
 
 func HandleSendMessagePubsub(ctx context.Context, m pubsub.RawPubsubMessage) error {
 	return handlePubsub(pubsub.SendMessageTopicName, ctx, m)
+}
+
+func HandleIncomingEventPubsub(ctx context.Context, m pubsub.RawPubsubMessage) error {
+	return handlePubsub(pubsub.IncomingEventTopicName, ctx, m)
 }

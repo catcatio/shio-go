@@ -196,14 +196,14 @@ func makeMessage(event *linebot.Event) Message {
 	}
 }
 
-func (l *LineEvent) IncomingEvent(profile *UserProfile) *IncomingEvent {
+func (l *LineEvent) IncomingEvent(channelID string) *IncomingEvent {
 	return &IncomingEvent{
+		channelID,
 		l.getMessage(),
 		l.getReplyToken(),
 		l.getTimestamp(),
 		l.getSource(),
 		l.getProvider(),
-		profile,
 		l.getOriginalEvent(),
 	}
 }

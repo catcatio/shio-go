@@ -21,9 +21,9 @@ var (
 	ParamProvider  = "provider"
 )
 
-func New(chat usecases.Chat, line usecases.Line) *Endpoints {
+func New(chat usecases.Chat) *Endpoints {
 	handlers := ProviderEndpointHandlers{
-		"line": newLineEndpointFunc(chat, line),
+		"line": newLineEndpointFunc(chat),
 	}
 
 	return &Endpoints{

@@ -1,50 +1,104 @@
 package repositories
 
 import (
-	"cloud.google.com/go/dialogflow/apiv2"
+	dialogflow "cloud.google.com/go/dialogflow/apiv2"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
+	entities2 "github.com/catcatio/shio-go/svcs/chat/entities"
 	structpb "github.com/golang/protobuf/ptypes/struct"
-	"github.com/octofoxio/foundation/logger"
 	"google.golang.org/api/option"
-	dialogflowpb "google.golang.org/genproto/googleapis/cloud/dialogflow/v2"
+	dialogflow2 "google.golang.org/genproto/googleapis/cloud/dialogflow/v2"
 )
 
 var (
 	ErrMessageTypeNotSupported = errors.New("message type not supported")
+	ErrInvalidConfig           = errors.New("invalid configuration")
 )
 
 type IntentRepository interface {
-	Detect(ctx context.Context, m entities.Message, sessionID string, languageCode string) (*entities.Intent, error)
+	AddDetector(detector IntentDetector)
+	Detect(ctx context.Context, event *entities.IncomingEvent) (*entities.Intent, error)
 }
 
-type dialogflowIntentRepository struct {
-	projectName string
-	client      *dialogflow.SessionsClient
-	log         *logger.Logger
+type intentRepository struct {
+	channelOptionsRepo     ChannelOptionsRepository
+	intentDetectorProvider IntentDetectorProvider
 }
 
-func NewDialogflowIntentRepository(projectName string, credentialsJson string) IntentRepository {
-	log := logger.New("dialogflowIntent")
-	ctx := context.Background()
-	opts := option.WithCredentialsJSON([]byte(credentialsJson))
-	client, err := dialogflow.NewSessionsClient(ctx, opts)
+func NewIntentRepository(channelOptionsRepo ChannelOptionsRepository) IntentRepository {
+	intent := &intentRepository{
+		channelOptionsRepo:     channelOptionsRepo,
+		intentDetectorProvider: newIntentDetectorProvider(),
+	}
+
+	intent.AddDetector(NewDialogflowIntentDetector())
+	return intent
+}
+
+func (i *intentRepository) AddDetector(detector IntentDetector) {
+	i.intentDetectorProvider.Add(detector)
+}
+
+func (i *intentRepository) Detect(ctx context.Context, event *entities.IncomingEvent) (*entities.Intent, error) {
+	channelOptions, err := i.channelOptionsRepo.Get(ctx, event.ChannelID)
+	if err != nil {
+		return nil, err
+	}
+	detector, err := i.intentDetectorProvider.Get(channelOptions.IntentDetector)
 
 	if err != nil {
-		// panic here
-		log.WithError(err).WithServiceInfo("New").Panic("new dialog client failed")
+		return nil, err
+	}
+	return detector.Detect(ctx, channelOptions, event)
+}
+
+type IntentDetectorProvider interface {
+	Add(detector IntentDetector)
+	Get(provider string) (IntentDetector, error)
+}
+
+type IntentDetector interface {
+	Name() string
+	Detect(ctx context.Context, channelOptions *entities2.ChannelConfig, event *entities.IncomingEvent) (*entities.Intent, error)
+}
+
+type defaultIntentDetectorProvider struct {
+	detectors map[string]IntentDetector
+}
+
+func (d *defaultIntentDetectorProvider) Add(detector IntentDetector) {
+	d.detectors[detector.Name()] = detector
+}
+
+func (d *defaultIntentDetectorProvider) Get(name string) (IntentDetector, error) {
+	if d, ok := d.detectors[name]; ok {
+		return d, nil
 	}
 
-	return &dialogflowIntentRepository{
-		projectName: projectName,
-		client:      client,
-		log:         log,
+	return nil, errors.New("not found")
+}
+
+func newIntentDetectorProvider() IntentDetectorProvider {
+	return &defaultIntentDetectorProvider{
+		detectors: make(map[string]IntentDetector),
 	}
 }
 
-func (i *dialogflowIntentRepository) Detect(ctx context.Context, m entities.Message, sessionID string, languageCode string) (*entities.Intent, error) {
+type dialogflowIntentDetector struct {
+}
+
+func NewDialogflowIntentDetector() IntentDetector {
+	return &dialogflowIntentDetector{}
+}
+
+func (d *dialogflowIntentDetector) Name() string {
+	return "dialogflow"
+}
+
+func (d *dialogflowIntentDetector) Detect(ctx context.Context, channelOptions *entities2.ChannelConfig, event *entities.IncomingEvent) (*entities.Intent, error) {
+	m := event.Message
 	if m.GetType() != entities.MessageTypeTextMessage {
 		return nil, ErrMessageTypeNotSupported
 	}
@@ -56,13 +110,31 @@ func (i *dialogflowIntentRepository) Detect(ctx context.Context, m entities.Mess
 		eventMsg = e
 	}
 
+	if channelOptions.DialogflowOptions == nil ||
+		channelOptions.DialogflowOptions.CredentialsJson == "" ||
+		channelOptions.DialogflowOptions.ProjectID == "" {
+		return nil, ErrInvalidConfig
+	}
+
+	dfConfig := channelOptions.DialogflowOptions
+
+	opts := option.WithCredentialsJSON([]byte(dfConfig.CredentialsJson))
+	client, err := dialogflow.NewSessionsClient(ctx, opts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: detect language (set as option)
+	languageCode := "en"
+	sessionID := event.Source.GetSessionID()
 	textMsg := eventMsg.Parameters.String("Text")
-	session := fmt.Sprintf("projects/%s/agent/sessions/%s", i.projectName, sessionID)
-	response, err := i.client.DetectIntent(ctx, &dialogflowpb.DetectIntentRequest{
+	session := fmt.Sprintf("projects/%s/agent/sessions/%s", dfConfig.ProjectID, sessionID)
+	response, err := client.DetectIntent(ctx, &dialogflow2.DetectIntentRequest{
 		Session: session,
-		QueryInput: &dialogflowpb.QueryInput{
-			Input: &dialogflowpb.QueryInput_Text{
-				Text: &dialogflowpb.TextInput{
+		QueryInput: &dialogflow2.QueryInput{
+			Input: &dialogflow2.QueryInput_Text{
+				Text: &dialogflow2.TextInput{
 					Text:         textMsg,
 					LanguageCode: languageCode,
 				},

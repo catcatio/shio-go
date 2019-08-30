@@ -13,22 +13,22 @@ import (
 )
 
 func Initializer(options *kernel.ServiceOptions) (*grpc.Server, http.Handler) {
-	chat, line := initialUsecases(options)
-	eps := endpoints.New(chat, line)
+	chat, _ := initialUsecases(options)
+	eps := endpoints.New(chat)
 	httpHandler := transports.NewHttpServer(eps)
 
 	return nil, httpHandler
 }
 
 func initialUsecases(options *kernel.ServiceOptions) (chat usecases.Chat, line usecases.Line) {
-	log := logger.New("chatsvc").WithServiceInfo("initialUsecases")
+	log := logger.New("chat").WithServiceInfo("initialUsecases")
 	log.Debug("enter")
 	defer log.Debug("exit")
 
-	incomingRepo := repositories.NewIncomingEventRepository(options.PubsubClient)
+	incomingRepo := repositories.NewIncomingEventRepository(options.PubsubClients)
 	channelOptions := repositories.NewChannelOptionsRepository(options.DatastoreClient)
 	userProfileRepo := repositories.NewUserProfileRepository(options.DatastoreClient)
-	sendMessageRepo := repositories.NewSendMessageRepository(pubsub.NewClients(options.PubsubClient))
+	sendMessageRepo := repositories.NewSendMessageRepository(options.PubsubClients)
 	lineRepo := repositories.NewLineRepository()
 
 	line = usecases.NewLine(userProfileRepo, lineRepo)
@@ -43,10 +43,15 @@ func NewWebhookHandler(options *kernel.ServiceOptions) http.Handler {
 }
 
 func NewPubsubHandler(options *kernel.ServiceOptions) pubsub.Handler {
-	chat, line := initialUsecases(options)
+	channelOptions := repositories.NewChannelOptionsRepository(options.DatastoreClient)
+	sendMessageRepo := repositories.NewSendMessageRepository(options.PubsubClients)
+	sendMessageUsecase := usecases.NewSendMessageUsecase(channelOptions, sendMessageRepo)
+	intentRepo := repositories.NewIntentRepository(channelOptions)
+	intentUsecase := usecases.NewIntentUsecase(channelOptions, intentRepo)
 
-	handlers := endpoints.PubsubMessageHandlers{
-		"send-message-topic": endpoints.NewSendMessagePubsubEndpoint(chat, line),
-	}
+	handlers := make(endpoints.PubsubMessageHandlers)
+	handlers[pubsub.SendMessageTopicName] = endpoints.NewSendMessagePubsubEndpoint(sendMessageUsecase)
+	handlers[pubsub.IncomingEventTopicName] = endpoints.NewIncomingEventPubsubEndpoint(intentUsecase)
+
 	return transports.NewPubsubServer(handlers)
 }

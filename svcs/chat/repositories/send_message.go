@@ -7,7 +7,7 @@ import (
 )
 
 type SendMessageRepository interface {
-	Send(ctx context.Context, input entities.SendMessageInput) error
+	Send(ctx context.Context, input *entities.SendMessageInput) error
 }
 
 type sendMessageRepository struct {
@@ -20,6 +20,6 @@ func NewSendMessageRepository(c *pubsub.Clients) SendMessageRepository {
 	}
 }
 
-func (s *sendMessageRepository) Send(ctx context.Context, input entities.SendMessageInput) error {
+func (s *sendMessageRepository) Send(ctx context.Context, input *entities.SendMessageInput) error {
 	return s.pubsubClient.PublishSendMessageInput(ctx, input)
 }

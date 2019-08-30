@@ -5,6 +5,7 @@ import (
 	"github.com/catcatio/shio-go/nub/datastore"
 	"github.com/catcatio/shio-go/nub/pubsub"
 	"github.com/catcatio/shio-go/pkg/kernel"
+	pubsub2 "github.com/catcatio/shio-go/pkg/transport/pubsub"
 	"github.com/octofoxio/foundation"
 	"github.com/octofoxio/foundation/logger"
 )
@@ -30,7 +31,7 @@ func LoadLocalOptions() *kernel.ServiceOptions {
 	}
 
 	serviceOptions := &kernel.ServiceOptions{
-		PubsubClient:    pubsubClient,
+		PubsubClients:   pubsub2.NewClients(pubsubClient),
 		DatastoreClient: datastoreClient,
 	}
 

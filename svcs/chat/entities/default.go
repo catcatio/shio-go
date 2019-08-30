@@ -15,6 +15,7 @@ type WebhookInput struct {
 type ChannelConfig struct {
 	ID             string
 	IntentDetector string
+	DetectLanguage bool
 	*kernel.LineChatOptions
 	*kernel.DialogflowOptions
 }
