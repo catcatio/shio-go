@@ -206,5 +206,6 @@ func (l *LineEvent) IncomingEvent(requestID, channelID string) *IncomingEvent {
 		l.getSource(),
 		l.getProvider(),
 		l.getOriginalEvent(),
+		nil,
 	}
 }

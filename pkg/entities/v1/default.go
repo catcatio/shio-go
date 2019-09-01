@@ -38,12 +38,8 @@ const (
 	ProviderTypeUnknown ProviderType = "unknown"
 )
 
-func (p *ProviderType) String() string {
-	if p == nil {
-		return ""
-	}
-
-	return string(*p)
+func (p ProviderType) String() string {
+	return string(p)
 }
 
 type Intent struct {
@@ -85,18 +81,6 @@ func (s *Source) GetSessionID() string {
 	return fmt.Sprintf("%s-%s%s", s.UserID, s.RoomID, s.GroupID)
 }
 
-type OutgoingEvent struct {
-}
-
-type event interface {
-	getMessage() EventMessage
-	getReplyToken() string
-	getTimestamp() time.Time
-	getSource() *Source
-	getProvider() ProviderType
-	getOriginalEvent() interface{}
-}
-
 type IncomingEvent struct {
 	RequestID  string        `json:"request_id"`
 	ChannelID  string        `json:"channel_id"`
@@ -106,18 +90,7 @@ type IncomingEvent struct {
 	Source     *Source       `json:"source"`
 	Provider   ProviderType  `json:"provider"`
 	Original   interface{}   `json:"original"`
-}
-
-type ParsedEvent struct {
-	RequestID   string        `json:"request_id"`
-	Message     *EventMessage `json:"message"`
-	ReplyToken  string        `json:"reply_token"`
-	TimeStamp   time.Time     `json:"timestamp"`
-	Source      *Source       `json:"source,omitempty"`
-	Provider    ProviderType  `json:"provider"`
-	UserProfile *UserProfile  `json:"user_profile,omitempty"`
-	Original    interface{}   `json:"original"`
-	Intent      *Intent       `json:"intent"`
+	Intent     *Intent       `json:"intent"`
 }
 
 type UserProfile struct {
@@ -126,11 +99,9 @@ type UserProfile struct {
 	PictureUrl  string
 }
 
-type SendMessageInput struct {
-	RequestID   string       `json:"request_id"`
-	ChannelID   string       `json:"channel_id"`
-	ReplyToken  string       `json:"reply_token"`
-	Provider    ProviderType `json:"provider"`
-	RecipientID string       `json:"recipient_id"`
-	Payload     interface{}  `json:"payload"`
+type OutgoingEvent struct {
+	RequestID       string           `json:"request_id"`
+	ChannelID       string           `json:"channel_id"`
+	Type            string           `json:"type"`
+	OutgoingMessage *OutgoingMessage `json:"outgoing_message,omitempty"`
 }

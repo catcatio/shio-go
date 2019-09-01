@@ -13,8 +13,8 @@ import (
 type PubsubMessageHandlers map[string]PubsubMessageHandler
 type PubsubMessageHandler func(ctx context.Context, m pubsub.RawPubsubMessage) error
 
-func NewSendMessagePubsubEndpoint(sendMessage usecases.SendMessageUsecase) PubsubMessageHandler {
-	log := logger.New("SendMessage")
+func NewOutgoingEventPubsubEndpoint(outgoingEvent usecases.OutgoingEventUsecase) PubsubMessageHandler {
+	log := logger.New("OutgoingEvent")
 	return func(ctx context.Context, m pubsub.RawPubsubMessage) error {
 
 		if m.Data == nil {
@@ -23,7 +23,7 @@ func NewSendMessagePubsubEndpoint(sendMessage usecases.SendMessageUsecase) Pubsu
 			return err
 		}
 
-		input := new(entities.SendMessageInput)
+		input := new(entities.OutgoingEvent)
 
 		if err := json.Unmarshal(m.Data, input); err != nil {
 			log.WithError(err).WithField("data", string(m.Data)).Error("unmarshal data failed")
@@ -32,6 +32,6 @@ func NewSendMessagePubsubEndpoint(sendMessage usecases.SendMessageUsecase) Pubsu
 
 		log.Println(input)
 
-		return sendMessage.HandleMessage(ctx, input)
+		return outgoingEvent.Handle(ctx, input)
 	}
 }

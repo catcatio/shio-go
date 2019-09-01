@@ -9,7 +9,8 @@ import (
 
 const (
 	IncomingEventTopicName = "incoming-event-topic"
-	SendMessageTopicName   = "send-message-topic"
+	OutgoingEventTopicName = "outgoing-message-topic"
+	FulfillmentTopicName   = "fulfillment-topic"
 )
 
 type Clients struct {
@@ -42,17 +43,21 @@ func (c *Clients) IncomingEventTopic() *pubsub.Topic {
 	return c.topic(IncomingEventTopicName)
 }
 
-func (c *Clients) SendMessageTopic() *pubsub.Topic {
-	return c.topic(SendMessageTopicName)
+func (c *Clients) OutgoingEventTopic() *pubsub.Topic {
+	return c.topic(OutgoingEventTopicName)
 }
 
-func (c *Clients) PublishSendMessageInput(ctx context.Context, input *entities.SendMessageInput) error {
+func (c *Clients) FulfillmentTopic() *pubsub.Topic {
+	return c.topic(FulfillmentTopicName)
+}
+
+func (c *Clients) PublishOutgoingEventInput(ctx context.Context, input *entities.OutgoingEvent) error {
 	b, err := json.Marshal(input)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.SendMessageTopic().Publish(ctx, &pubsub.Message{Data: b}).Get(ctx)
+	_, err = c.OutgoingEventTopic().Publish(ctx, &pubsub.Message{Data: b}).Get(ctx)
 	return err
 }
 
@@ -64,4 +69,8 @@ func (c *Clients) PublishIncomingEvent(ctx context.Context, input *entities.Inco
 
 	_, err = c.IncomingEventTopic().Publish(ctx, &pubsub.Message{Data: b}).Get(ctx)
 	return err
+}
+
+func (c *Clients) PublishFulfillmentInput(ctx context.Context, input *entities.Fulfillment) error {
+	return nil
 }

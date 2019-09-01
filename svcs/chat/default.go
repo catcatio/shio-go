@@ -22,13 +22,13 @@ func NewWebhookHandler(options *kernel.ServiceOptions) http.Handler {
 
 func NewPubsubHandler(options *kernel.ServiceOptions) pubsub.Handler {
 	channelConfig := repositories.NewChannelConfigRepository(options.DatastoreClient)
-	sendMessageRepo := repositories.NewSendMessageRepository(options.PubsubClients)
-	sendMessageUsecase := usecases.NewSendMessageUsecase(channelConfig, sendMessageRepo)
+	outgoingEventRepo := repositories.NewOutgoingEventRepository(options.PubsubClients)
+	outgoingEventUsecase := usecases.NewOutgoingEventUsecase(channelConfig, outgoingEventRepo)
 	intentRepo := repositories.NewIntentRepository(channelConfig)
 	intentUsecase := usecases.NewIntentUsecase(channelConfig, intentRepo)
 
 	handlers := make(endpoints.PubsubMessageHandlers)
-	handlers[pubsub.SendMessageTopicName] = endpoints.NewSendMessagePubsubEndpoint(sendMessageUsecase)
+	handlers[pubsub.OutgoingEventTopicName] = endpoints.NewOutgoingEventPubsubEndpoint(outgoingEventUsecase)
 	handlers[pubsub.IncomingEventTopicName] = endpoints.NewIncomingEventPubsubEndpoint(intentUsecase)
 
 	return transports.NewPubsubServer(handlers)

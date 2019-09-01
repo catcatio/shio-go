@@ -32,6 +32,13 @@ func (e *EventMessage) GetType() string {
 	return e.Type
 }
 
-//type Message interface {
-//	GetType() string
-//}
+const (
+	OutgoingEventTypeTextMessage string = "textMessage"
+)
+
+type OutgoingMessage struct {
+	ReplyToken  string       `json:"reply_token"`
+	Provider    ProviderType `json:"provider"`
+	RecipientID string       `json:"recipient_id"`
+	Payload     interface{}  `json:"payload"`
+}

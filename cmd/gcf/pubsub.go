@@ -49,8 +49,8 @@ func handlePubsub(topic string, ctx context.Context, m pubsub.RawPubsubMessage) 
 	return pubsubHandler.Serve(topic, ctx, m)
 }
 
-func HandleSendMessagePubsub(ctx context.Context, m pubsub.RawPubsubMessage) error {
-	return handlePubsub(pubsub.SendMessageTopicName, ctx, m)
+func HandleOutgoingEventPubsub(ctx context.Context, m pubsub.RawPubsubMessage) error {
+	return handlePubsub(pubsub.OutgoingEventTopicName, ctx, m)
 }
 
 func HandleIncomingEventPubsub(ctx context.Context, m pubsub.RawPubsubMessage) error {
