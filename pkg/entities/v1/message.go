@@ -24,14 +24,14 @@ const (
 )
 
 type EventMessage struct {
-	Type string `json:"type"`
-	Parameters
+	Type       string     `json:"type"`
+	Parameters Parameters `json:"parameters"`
 }
 
 func (e *EventMessage) GetType() string {
 	return e.Type
 }
 
-type Message interface {
-	GetType() string
-}
+//type Message interface {
+//	GetType() string
+//}

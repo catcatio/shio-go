@@ -9,25 +9,26 @@ import (
 )
 
 type IncomingEventUsecase interface {
+	GetChannelConfig(ctx context.Context, channelID string) (*entities.ChannelConfig, error)
 	HandleEvents(ctx context.Context, in *entities.WebhookInput) (err error)
 }
 
 type incomingEventUsecase struct {
-	channelOptionsRepo repositories.ChannelOptionsRepository
-	incomingRepo       repositories.IncomingEventRepository
-	log                *logger.Logger
+	channelConfigRepo repositories.ChannelConfigRepository
+	incomingRepo      repositories.IncomingEventRepository
+	log               *logger.Logger
 }
 
-func NewIncomingEventUsecase(channelOptionsRepo repositories.ChannelOptionsRepository, incomingRepo repositories.IncomingEventRepository) IncomingEventUsecase {
+func NewIncomingEventUsecase(channelConfigRepo repositories.ChannelConfigRepository, incomingRepo repositories.IncomingEventRepository) IncomingEventUsecase {
 	return &incomingEventUsecase{
-		channelOptionsRepo: channelOptionsRepo,
-		incomingRepo:       incomingRepo,
-		log:                logger.New("IncomingEvent"),
+		channelConfigRepo: channelConfigRepo,
+		incomingRepo:      incomingRepo,
+		log:               logger.New("IncomingEvent"),
 	}
 }
 
 func (i *incomingEventUsecase) HandleEvents(ctx context.Context, in *entities.WebhookInput) (err error) {
-	log := i.log.WithServiceInfo("HandleIncomingEvents").WithRequestID(foundation.GetRequestIDFromContext(ctx))
+	log := i.log.WithServiceInfo("HandleEvents").WithRequestID(foundation.GetRequestIDFromContext(ctx))
 	log.Infof("%d incoming event(s) from %s", len(in.Events), in.Provider)
 
 	// forward event
@@ -40,4 +41,8 @@ func (i *incomingEventUsecase) HandleEvents(ctx context.Context, in *entities.We
 	}
 
 	return
+}
+
+func (i *incomingEventUsecase) GetChannelConfig(ctx context.Context, channelID string) (*entities.ChannelConfig, error) {
+	return i.channelConfigRepo.Get(ctx, channelID)
 }

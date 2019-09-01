@@ -2,6 +2,7 @@ package endpoints
 
 import (
 	"context"
+	"github.com/catcatio/shio-go/nub"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
 	chatentities "github.com/catcatio/shio-go/svcs/chat/entities"
 	"github.com/catcatio/shio-go/svcs/chat/usecases"
@@ -23,7 +24,7 @@ func isSystemMessage(event *linebot.Event) bool {
 	return event.ReplyToken == "00000000000000000000000000000000" || event.ReplyToken == "ffffffffffffffffffffffffffffffff"
 }
 
-func newLineEndpointFunc(chat usecases.Chat) ProviderEndpointFunc {
+func newLineEndpointFunc(incomingEvent usecases.IncomingEventUsecase) ProviderEndpointFunc {
 	return func(ctx context.Context, options *chatentities.ChannelConfig, w http.ResponseWriter, r *http.Request) {
 		log := logger.New("newLineEndpointFunc")
 		lineOptions := options.LineChatOptions
@@ -55,7 +56,7 @@ func newLineEndpointFunc(chat usecases.Chat) ProviderEndpointFunc {
 				return // response and return
 			}
 
-			le = append(le, (&entities.LineEvent{Event: e}).IncomingEvent(options.ID))
+			le = append(le, (&entities.LineEvent{Event: e}).IncomingEvent(nub.NewID(), options.ID))
 		}
 
 		// just return 200 OK, handle the rest internally
@@ -73,7 +74,7 @@ func newLineEndpointFunc(chat usecases.Chat) ProviderEndpointFunc {
 					log.WithError(e).Error("panic occurred")
 				}
 			}()
-			err = chat.HandleIncomingEvents(ctx,
+			err = incomingEvent.HandleEvents(ctx,
 				&chatentities.WebhookInput{
 					Provider:  entities.ProviderTypeLine,
 					ChannelID: options.ID,

@@ -21,13 +21,13 @@ var (
 	ParamProvider  = "provider"
 )
 
-func New(chat usecases.Chat) *Endpoints {
+func New(incomingEvent usecases.IncomingEventUsecase) *Endpoints {
 	handlers := ProviderEndpointHandlers{
-		"line": newLineEndpointFunc(chat),
+		"line": newLineEndpointFunc(incomingEvent),
 	}
 
 	return &Endpoints{
-		Webhook: newWebHookEndpoint(chat, handlers),
+		Webhook: newWebhookEndpoint(incomingEvent, handlers),
 		Ping:    newPingEndpoint(),
 	}
 }

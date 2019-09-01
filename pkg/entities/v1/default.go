@@ -89,7 +89,7 @@ type OutgoingEvent struct {
 }
 
 type event interface {
-	getMessage() Message
+	getMessage() EventMessage
 	getReplyToken() string
 	getTimestamp() time.Time
 	getSource() *Source
@@ -98,25 +98,26 @@ type event interface {
 }
 
 type IncomingEvent struct {
-	ChannelID  string
-	Message    Message
-	ReplyToken string
-	TimeStamp  time.Time
-	Source     *Source
-	Provider   ProviderType
-	Original   interface{}
+	RequestID  string        `json:"request_id"`
+	ChannelID  string        `json:"channel_id"`
+	Message    *EventMessage `json:"message,omitempty"`
+	ReplyToken string        `json:"reply_token"`
+	TimeStamp  time.Time     `json:"time_stamp"`
+	Source     *Source       `json:"source"`
+	Provider   ProviderType  `json:"provider"`
+	Original   interface{}   `json:"original"`
 }
 
 type ParsedEvent struct {
-	RequestID   string       `json:"request_id"`
-	Message     Message      `json:"message"`
-	ReplyToken  string       `json:"reply_token"`
-	TimeStamp   time.Time    `json:"timestamp"`
-	Source      *Source      `json:"source,omitempty"`
-	Provider    ProviderType `json:"provider"`
-	UserProfile *UserProfile `json:"user_profile,omitempty"`
-	Original    interface{}  `json:"original"`
-	Intent      *Intent      `json:"intent"`
+	RequestID   string        `json:"request_id"`
+	Message     *EventMessage `json:"message"`
+	ReplyToken  string        `json:"reply_token"`
+	TimeStamp   time.Time     `json:"timestamp"`
+	Source      *Source       `json:"source,omitempty"`
+	Provider    ProviderType  `json:"provider"`
+	UserProfile *UserProfile  `json:"user_profile,omitempty"`
+	Original    interface{}   `json:"original"`
+	Intent      *Intent       `json:"intent"`
 }
 
 type UserProfile struct {

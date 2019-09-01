@@ -10,10 +10,10 @@ import (
 	"github.com/catcatio/shio-go/nub/pubsub"
 	shio "github.com/catcatio/shio-go/pkg"
 	"github.com/catcatio/shio-go/pkg/kernel"
+	"github.com/catcatio/shio-go/pkg/transport/middleware"
 	pubsub2 "github.com/catcatio/shio-go/pkg/transport/pubsub"
 	"github.com/catcatio/shio-go/svcs/chat"
 	"github.com/catcatio/shio-go/svcs/chat/entities"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/octofoxio/foundation"
 	"github.com/octofoxio/foundation/logger"
@@ -223,14 +223,12 @@ func (s *Starter) Start() *Service {
 	pubsubHandler := chat.NewPubsubHandler(s.Options)
 	pubsubHttpHandler := newPubsubPushEndpoint(pubsubHandler)
 
-	finalHandler := makeEndpoints(webHookHandler, pubsubHttpHandler)
-
-	loggedRouter := handlers.LoggingHandler(&localLogger{log: s.Log.WithServiceInfo("http-server")}, finalHandler)
-
+	handler := makeEndpoints(webHookHandler, pubsubHttpHandler)
+	finalHandler := middleware.LoggingHandler(log.WithServiceInfo("serve"), handler)
 	address := fmt.Sprintf("%s:%s", s.Host, s.Port)
 	srv := &http.Server{
 		Addr:    address,
-		Handler: loggedRouter,
+		Handler: finalHandler,
 	}
 
 	go func() {

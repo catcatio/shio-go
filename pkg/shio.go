@@ -79,3 +79,7 @@ func AppendRequestIDToContext(ctx context.Context, userID string) context.Contex
 	ctx = foundation.AppendRequestIDToContext(ctx, userID)
 	return ctx
 }
+
+func ReqIDFromContext(ctx context.Context) string {
+	return foundation.GetRequestIDFromContext(ctx)
+}

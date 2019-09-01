@@ -10,7 +10,7 @@ type LineEvent struct {
 	*linebot.Event
 }
 
-func (l *LineEvent) getMessage() Message {
+func (l *LineEvent) getMessage() *EventMessage {
 	return makeMessage(l.Event)
 }
 
@@ -53,7 +53,7 @@ func (l *LineEvent) getOriginalEvent() interface{} {
 	return *l
 }
 
-func makeMessage(event *linebot.Event) Message {
+func makeMessage(event *linebot.Event) *EventMessage {
 	switch event.Type {
 	case linebot.EventTypeFollow:
 		return &EventMessage{
@@ -196,8 +196,9 @@ func makeMessage(event *linebot.Event) Message {
 	}
 }
 
-func (l *LineEvent) IncomingEvent(channelID string) *IncomingEvent {
+func (l *LineEvent) IncomingEvent(requestID, channelID string) *IncomingEvent {
 	return &IncomingEvent{
+		requestID,
 		channelID,
 		l.getMessage(),
 		l.getReplyToken(),

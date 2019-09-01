@@ -13,14 +13,16 @@ var pubsubHandler pubsub.Handler
 
 func init() {
 	projectID := os.Getenv("GCLOUD_PROJECT")
+	log := logger.New("handlePubsub").WithServiceInfo("init")
+	log.Printf("initial function pubsub in %s\n", projectID)
+
 	ctx := context.Background()
-	fmt.Printf("initial function pubsub in %s\n", projectID)
 	options := newServiceOptions(ctx, projectID)
 	pubsubHandler = chat.NewPubsubHandler(options)
 }
 
 func handlePubsub(topic string, ctx context.Context, m pubsub.RawPubsubMessage) (err error) {
-	log := logger.New("handlePubsub").WithField("topic", topic)
+	log := logger.New("handlePubsub").WithServiceInfo("handlePubsub").WithField("topic", topic)
 	if m.Data == nil {
 		err := fmt.Errorf("data is nil")
 		log.WithError(err).Error("handle pubsub failed")

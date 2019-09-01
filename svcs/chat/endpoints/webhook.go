@@ -1,32 +1,52 @@
 package endpoints
 
 import (
-	"context"
+	"github.com/catcatio/shio-go/nub"
+	shio "github.com/catcatio/shio-go/pkg"
 	"github.com/catcatio/shio-go/svcs/chat/usecases"
 	"github.com/gorilla/mux"
+	"github.com/octofoxio/foundation/logger"
 	"net/http"
 )
 
-func newWebHookEndpoint(chat usecases.Chat, handlers ProviderEndpointHandlers) EndpointFunc {
+func newWebhookEndpoint(incomingEvent usecases.IncomingEventUsecase, handlers ProviderEndpointHandlers) EndpointFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		requestID := nub.NewID()
+		log := logger.New("WebhookEndpoint").WithServiceInfo("handler").WithRequestID(requestID)
+		log.Debug("enter")
+		defer log.Debug("exit")
+
 		params := mux.Vars(r)
 		channelID := params[ParamChannelID]
 		provider := params[ParamProvider]
-		handler := handlers[provider]
 
-		if channelID == "" || provider == "" || handler == nil {
+		log = log.WithField("channelID", channelID).WithField("provider", provider)
+
+		if channelID == "" || provider == "" {
+			log.Error("parameter missing")
 			writeNotFoundResponse(w)
 			return
 		}
 
-		ctx := context.Background()
-		channelOptions, err := chat.GetChannelConfig(ctx, channelID)
+		handler := handlers[provider]
+		if handler == nil {
+			log.Error("handler not found")
+			log.Error("parameter missing")
+			writeNotFoundResponse(w)
+			return
+		}
+
+		ctx := shio.NewContextWithRequestID(requestID)
+		log.Info("getting channel config")
+		channelConfig, err := incomingEvent.GetChannelConfig(ctx, channelID)
 
 		if err != nil {
+			log.WithError(err).Error("get channel config failed")
 			writeNotFoundResponse(w)
 			return
 		}
 
-		handler(ctx, channelOptions, w, r)
+		log.Info("handling request config")
+		handler(ctx, channelConfig, w, r)
 	}
 }

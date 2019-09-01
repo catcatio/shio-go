@@ -10,6 +10,7 @@ import (
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"google.golang.org/api/option"
 	dialogflow2 "google.golang.org/genproto/googleapis/cloud/dialogflow/v2"
+	"strings"
 )
 
 var (
@@ -23,13 +24,13 @@ type IntentRepository interface {
 }
 
 type intentRepository struct {
-	channelOptionsRepo     ChannelOptionsRepository
+	channelConfigRepo      ChannelConfigRepository
 	intentDetectorProvider IntentDetectorProvider
 }
 
-func NewIntentRepository(channelOptionsRepo ChannelOptionsRepository) IntentRepository {
+func NewIntentRepository(channelConfigRepo ChannelConfigRepository) IntentRepository {
 	intent := &intentRepository{
-		channelOptionsRepo:     channelOptionsRepo,
+		channelConfigRepo:      channelConfigRepo,
 		intentDetectorProvider: newIntentDetectorProvider(),
 	}
 
@@ -42,16 +43,16 @@ func (i *intentRepository) AddDetector(detector IntentDetector) {
 }
 
 func (i *intentRepository) Detect(ctx context.Context, event *entities.IncomingEvent) (*entities.Intent, error) {
-	channelOptions, err := i.channelOptionsRepo.Get(ctx, event.ChannelID)
+	channelConfig, err := i.channelConfigRepo.Get(ctx, event.ChannelID)
 	if err != nil {
 		return nil, err
 	}
-	detector, err := i.intentDetectorProvider.Get(channelOptions.IntentDetector)
+	detector, err := i.intentDetectorProvider.Get(channelConfig.IntentDetector)
 
 	if err != nil {
 		return nil, err
 	}
-	return detector.Detect(ctx, channelOptions, event)
+	return detector.Detect(ctx, channelConfig, event)
 }
 
 type IntentDetectorProvider interface {
@@ -61,7 +62,7 @@ type IntentDetectorProvider interface {
 
 type IntentDetector interface {
 	Name() string
-	Detect(ctx context.Context, channelOptions *entities2.ChannelConfig, event *entities.IncomingEvent) (*entities.Intent, error)
+	Detect(ctx context.Context, channelConfig *entities2.ChannelConfig, event *entities.IncomingEvent) (*entities.Intent, error)
 }
 
 type defaultIntentDetectorProvider struct {
@@ -97,28 +98,24 @@ func (d *dialogflowIntentDetector) Name() string {
 	return "dialogflow"
 }
 
-func (d *dialogflowIntentDetector) Detect(ctx context.Context, channelOptions *entities2.ChannelConfig, event *entities.IncomingEvent) (*entities.Intent, error) {
-	m := event.Message
-	if m.GetType() != entities.MessageTypeTextMessage {
+func (d *dialogflowIntentDetector) Detect(ctx context.Context, channelConfig *entities2.ChannelConfig, event *entities.IncomingEvent) (*entities.Intent, error) {
+	eventMsg := event.Message
+	if eventMsg.GetType() != entities.MessageTypeTextMessage {
 		return nil, ErrMessageTypeNotSupported
 	}
 
-	var eventMsg *entities.EventMessage
-	if e, ok := m.(*entities.EventMessage); !ok {
-		return nil, ErrMessageTypeNotSupported
-	} else {
-		eventMsg = e
-	}
-
-	if channelOptions.DialogflowOptions == nil ||
-		channelOptions.DialogflowOptions.CredentialsJson == "" ||
-		channelOptions.DialogflowOptions.ProjectID == "" {
+	if channelConfig.DialogflowOptions == nil ||
+		channelConfig.DialogflowOptions.CredentialsJson == "" ||
+		channelConfig.DialogflowOptions.ProjectID == "" {
 		return nil, ErrInvalidConfig
 	}
 
-	dfConfig := channelOptions.DialogflowOptions
+	dfConfig := channelConfig.DialogflowOptions
 
-	opts := option.WithCredentialsJSON([]byte(dfConfig.CredentialsJson))
+	credentialsJson := strings.Trim(dfConfig.CredentialsJson, `"`)
+	credentialsJson = strings.ReplaceAll(credentialsJson, `'`, `"`)
+
+	opts := option.WithCredentialsJSON([]byte(credentialsJson))
 	client, err := dialogflow.NewSessionsClient(ctx, opts)
 
 	if err != nil {

@@ -2,9 +2,13 @@ package transports
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/catcatio/shio-go/pkg/transport/pubsub"
 	"github.com/catcatio/shio-go/svcs/chat/endpoints"
+)
+
+var (
+	ErrHandlerNotFound = errors.New("handler not found")
 )
 
 type defaultPubsubHandler struct {
@@ -16,7 +20,7 @@ func (d *defaultPubsubHandler) Serve(topic string, ctx context.Context, m pubsub
 		return handler(ctx, m)
 	}
 
-	return fmt.Errorf("handler not found for topic %s", topic)
+	return ErrHandlerNotFound
 }
 
 func NewPubsubServer(handlers endpoints.PubsubMessageHandlers) pubsub.Handler {
