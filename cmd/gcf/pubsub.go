@@ -56,3 +56,7 @@ func HandleOutgoingEventPubsub(ctx context.Context, m pubsub.RawPubsubMessage) e
 func HandleIncomingEventPubsub(ctx context.Context, m pubsub.RawPubsubMessage) error {
 	return handlePubsub(pubsub.IncomingEventTopicName, ctx, m)
 }
+
+func HandleFulfillmentPubsub(ctx context.Context, m pubsub.RawPubsubMessage) error {
+	return handlePubsub(pubsub.FulfillmentTopicName, ctx, m)
+}

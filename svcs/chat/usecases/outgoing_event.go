@@ -14,8 +14,8 @@ type OutgoingEventUsecase interface {
 }
 
 type outgoingEventUsecase struct {
-	outgoingEventRepo repositories.OutgoingEventRepository
 	channelConfigRepo repositories.ChannelConfigRepository
+	pubsubRepo        repositories.PubsubChannelRepository
 	log               *logger.Logger
 }
 
@@ -40,10 +40,10 @@ func (s *outgoingEventUsecase) Handle(ctx context.Context, input *entities.Outgo
 
 }
 
-func NewOutgoingEventUsecase(channelConfigRepo repositories.ChannelConfigRepository, outgoingEventRepo repositories.OutgoingEventRepository) OutgoingEventUsecase {
+func NewOutgoingEventUsecase(channelConfigRepo repositories.ChannelConfigRepository, pubsubRepo repositories.PubsubChannelRepository) OutgoingEventUsecase {
 	return &outgoingEventUsecase{
 		channelConfigRepo: channelConfigRepo,
-		outgoingEventRepo: outgoingEventRepo,
+		pubsubRepo:        pubsubRepo,
 		log:               logger.New("OutgoingEventUsecase"),
 	}
 }

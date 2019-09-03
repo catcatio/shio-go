@@ -11,8 +11,8 @@ type ServiceOptions struct {
 }
 
 type LineChatOptions struct {
-	ChannelSecret      string
-	ChannelAccessToken string
+	ChannelSecret      string `json:"line_channel_secret"`
+	ChannelAccessToken string `json:"line_channel_access_token"`
 }
 
 type DialogflowOptions struct {
@@ -20,9 +20,9 @@ type DialogflowOptions struct {
 }
 
 type GCPOptions struct {
-	ProjectID       string
-	CredentialsJson string
-	Endpoint        string
+	ProjectID       string `json:"project_id"`
+	CredentialsJson string `json:"credentials_json" datastore:",noindex"`
+	Endpoint        string `json:"endpoint"`
 }
 
 type ServiceConfigBase struct {
@@ -41,4 +41,8 @@ type DatastoreOptions struct {
 
 type ServiceOptionsProvider interface {
 	Get() (*ServiceOptions, error)
+}
+
+type FulfillmentOptions struct {
+	Endpoint string `json:"fulfillment_endpoint"`
 }

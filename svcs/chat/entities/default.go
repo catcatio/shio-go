@@ -7,17 +7,18 @@ import (
 )
 
 type WebhookInput struct {
-	Provider  entities.ProviderType
-	ChannelID string
+	Provider  entities.ProviderType     `json:"provider"`
+	ChannelID string                    `json:"channel_id"`
 	Events    []*entities.IncomingEvent `json:"events"`
 }
 
 type ChannelConfig struct {
-	ID             string
-	IntentDetector string
-	DetectLanguage bool
-	*kernel.LineChatOptions
-	*kernel.DialogflowOptions
+	ID                      string                     `json:"id"`
+	IntentDetector          string                     `json:"intent_detector"`
+	EnableLanguageDetection bool                       `json:"enable_language_detection"`
+	LineChatOptions         *kernel.LineChatOptions    `json:"line_chat_options"`
+	DialogflowOptions       *kernel.DialogflowOptions  `json:"dialogflow_options"`
+	FulfillmentOptions      *kernel.FulfillmentOptions `json:"fulfillment_options"`
 }
 
 func (c *ChannelConfig) Load(p []datastore.Property) error {

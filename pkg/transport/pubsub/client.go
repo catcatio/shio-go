@@ -9,7 +9,7 @@ import (
 
 const (
 	IncomingEventTopicName = "incoming-event-topic"
-	OutgoingEventTopicName = "outgoing-message-topic"
+	OutgoingEventTopicName = "outgoing-event-topic"
 	FulfillmentTopicName   = "fulfillment-topic"
 )
 
@@ -51,26 +51,24 @@ func (c *Clients) FulfillmentTopic() *pubsub.Topic {
 	return c.topic(FulfillmentTopicName)
 }
 
-func (c *Clients) PublishOutgoingEventInput(ctx context.Context, input *entities.OutgoingEvent) error {
-	b, err := json.Marshal(input)
+func (c *Clients) publish(ctx context.Context, topic *pubsub.Topic, message interface{}) error {
+	b, err := json.Marshal(message)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.OutgoingEventTopic().Publish(ctx, &pubsub.Message{Data: b}).Get(ctx)
+	_, err = topic.Publish(ctx, &pubsub.Message{Data: b}).Get(ctx)
 	return err
+}
+
+func (c *Clients) PublishOutgoingEventInput(ctx context.Context, input *entities.OutgoingEvent) error {
+	return c.publish(ctx, c.OutgoingEventTopic(), input)
 }
 
 func (c *Clients) PublishIncomingEvent(ctx context.Context, input *entities.IncomingEvent) error {
-	b, err := json.Marshal(input)
-	if err != nil {
-		return err
-	}
-
-	_, err = c.IncomingEventTopic().Publish(ctx, &pubsub.Message{Data: b}).Get(ctx)
-	return err
+	return c.publish(ctx, c.IncomingEventTopic(), input)
 }
 
-func (c *Clients) PublishFulfillmentInput(ctx context.Context, input *entities.Fulfillment) error {
-	return nil
+func (c *Clients) PublishFulfillmentInput(ctx context.Context, input *entities.IncomingEvent) error {
+	return c.publish(ctx, c.FulfillmentTopic(), input)
 }

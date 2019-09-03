@@ -11,10 +11,10 @@ import (
 )
 
 func NewWebhookHandler(options *kernel.ServiceOptions) http.Handler {
-	incomingRepo := repositories.NewIncomingEventRepository(options.PubsubClients)
+	pubsubRepo := repositories.NewPubsubChannelRepository(options.PubsubClients)
 	channelConfig := repositories.NewChannelConfigRepository(options.DatastoreClient)
 
-	chat := usecases.NewIncomingEventUsecase(channelConfig, incomingRepo)
+	chat := usecases.NewIncomingEventUsecase(channelConfig, pubsubRepo)
 	eps := endpoints.New(chat)
 	httpHandler := transports.NewHttpServer(eps)
 	return httpHandler
@@ -22,14 +22,17 @@ func NewWebhookHandler(options *kernel.ServiceOptions) http.Handler {
 
 func NewPubsubHandler(options *kernel.ServiceOptions) pubsub.Handler {
 	channelConfig := repositories.NewChannelConfigRepository(options.DatastoreClient)
-	outgoingEventRepo := repositories.NewOutgoingEventRepository(options.PubsubClients)
-	outgoingEventUsecase := usecases.NewOutgoingEventUsecase(channelConfig, outgoingEventRepo)
+	pubsubRepo := repositories.NewPubsubChannelRepository(options.PubsubClients)
+	outgoingEventUsecase := usecases.NewOutgoingEventUsecase(channelConfig, pubsubRepo)
 	intentRepo := repositories.NewIntentRepository(channelConfig)
-	intentUsecase := usecases.NewIntentUsecase(channelConfig, intentRepo)
+	intentUsecase := usecases.NewIntentUsecase(channelConfig, intentRepo, pubsubRepo)
+	fulfillmentRepo := repositories.NewFulfillmentRepository(channelConfig)
+	fulfillmentUsecase := usecases.NewFulfillmentUsecase(fulfillmentRepo)
 
 	handlers := make(endpoints.PubsubMessageHandlers)
 	handlers[pubsub.OutgoingEventTopicName] = endpoints.NewOutgoingEventPubsubEndpoint(outgoingEventUsecase)
 	handlers[pubsub.IncomingEventTopicName] = endpoints.NewIncomingEventPubsubEndpoint(intentUsecase)
+	handlers[pubsub.FulfillmentTopicName] = endpoints.NewFulfillmentPubsubEndpoint(fulfillmentUsecase)
 
 	return transports.NewPubsubServer(handlers)
 }

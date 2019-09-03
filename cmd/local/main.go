@@ -123,6 +123,7 @@ func setChannelConfig(opts *kernel.ServiceOptions, config *entities.ChannelConfi
 func setupEnvironment(opts *kernel.ServiceOptions) {
 	createPubsubChannel(opts, pubsub2.IncomingEventTopicName)
 	createPubsubChannel(opts, pubsub2.OutgoingEventTopicName)
+	createPubsubChannel(opts, pubsub2.FulfillmentTopicName)
 
 	channelSecret := foundation.EnvStringOrPanic("LINE_CHANNEL_SECRET")
 	channelAccessToken := foundation.EnvStringOrPanic("LINE_ACCESS_TOKEN")
@@ -142,6 +143,9 @@ func setupEnvironment(opts *kernel.ServiceOptions) {
 				CredentialsJson: gcpCredentials,
 				Endpoint:        "",
 			},
+		},
+		FulfillmentOptions: &kernel.FulfillmentOptions{
+			Endpoint: foundation.EnvStringOrPanic("FULFILLMENT_ENDPOINT"),
 		},
 	})
 }

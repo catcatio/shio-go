@@ -94,9 +94,9 @@ type IncomingEvent struct {
 }
 
 type UserProfile struct {
-	ID          string
-	DisplayName string
-	PictureUrl  string
+	ID          string `json:"id"`
+	DisplayName string `json:"display_name"`
+	PictureUrl  string `json:"picture_url"`
 }
 
 type OutgoingEvent struct {

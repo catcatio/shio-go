@@ -15,25 +15,25 @@ type IncomingEventUsecase interface {
 
 type incomingEventUsecase struct {
 	channelConfigRepo repositories.ChannelConfigRepository
-	incomingRepo      repositories.IncomingEventRepository
+	pubsubRepo        repositories.PubsubChannelRepository
 	log               *logger.Logger
 }
 
-func NewIncomingEventUsecase(channelConfigRepo repositories.ChannelConfigRepository, incomingRepo repositories.IncomingEventRepository) IncomingEventUsecase {
+func NewIncomingEventUsecase(channelConfigRepo repositories.ChannelConfigRepository, pubsubRepo repositories.PubsubChannelRepository) IncomingEventUsecase {
 	return &incomingEventUsecase{
 		channelConfigRepo: channelConfigRepo,
-		incomingRepo:      incomingRepo,
+		pubsubRepo:        pubsubRepo,
 		log:               logger.New("IncomingEvent"),
 	}
 }
 
 func (i *incomingEventUsecase) HandleEvents(ctx context.Context, in *entities.WebhookInput) (err error) {
-	log := i.log.WithServiceInfo("HandleEvents").WithRequestID(foundation.GetRequestIDFromContext(ctx))
+	log := i.log.WithServiceInfo("HandleEvents").WithField("provider", in.Provider).WithField("channelID", in.ChannelID).WithRequestID(foundation.GetRequestIDFromContext(ctx))
 	log.Infof("%d incoming event(s) from %s", len(in.Events), in.Provider)
 
-	// forward event
+	// publish events to incoming event
 	for _, e := range in.Events {
-		err = i.incomingRepo.Dispatch(ctx, e)
+		err = i.pubsubRepo.PublishIncomingEvent(ctx, e)
 		if err != nil {
 			log.WithError(err).Error("dispatch event failed")
 			return
