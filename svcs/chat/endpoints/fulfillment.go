@@ -6,11 +6,12 @@ import (
 	shio "github.com/catcatio/shio-go/pkg"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
 	"github.com/catcatio/shio-go/pkg/transport/pubsub"
+	"github.com/catcatio/shio-go/svcs/chat/repositories"
 	"github.com/catcatio/shio-go/svcs/chat/usecases"
 	"github.com/octofoxio/foundation/logger"
 )
 
-func NewFulfillmentPubsubEndpoint(fulfillment usecases.FulfillmentUsecase) PubsubMessageHandler {
+func NewFulfillmentPubsubEndpoint(fulfillment usecases.FulfillmentUsecase, channelConfigRepo repositories.ChannelConfigRepository) PubsubMessageHandler {
 	log := logger.New("NewFulfillmentPubsubEndpoint").WithServiceInfo("handle")
 	return func(ctx context.Context, m pubsub.RawPubsubMessage) error {
 		input := new(entities.IncomingEvent)
@@ -21,6 +22,13 @@ func NewFulfillmentPubsubEndpoint(fulfillment usecases.FulfillmentUsecase) Pubsu
 		}
 
 		ctx = shio.AppendRequestIDToContext(ctx, input.RequestID)
+		channelConfig, err := channelConfigRepo.Get(ctx, input.ChannelID)
+		if err != nil {
+			log.WithError(err).Error("get channel config failed")
+			return err
+		}
+
+		ctx = shio.PutContextValue(ctx, "channel_config", *channelConfig)
 
 		return fulfillment.Dispatch(ctx, input)
 	}

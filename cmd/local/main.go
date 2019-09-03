@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 )
 
@@ -204,15 +203,6 @@ type Starter struct {
 	Port    string
 	Options *kernel.ServiceOptions
 	Log     *logger.Logger
-}
-
-type localLogger struct {
-	log *logger.Logger
-}
-
-func (l *localLogger) Write(p []byte) (n int, err error) {
-	l.log.Info(strings.TrimSpace(string(p)))
-	return len(p), nil
 }
 
 func (s *Starter) Start() *Service {

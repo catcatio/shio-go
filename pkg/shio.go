@@ -83,3 +83,11 @@ func AppendRequestIDToContext(ctx context.Context, userID string) context.Contex
 func ReqIDFromContext(ctx context.Context) string {
 	return foundation.GetRequestIDFromContext(ctx)
 }
+
+func PutContextValue(ctx context.Context, key string, value interface{}) context.Context {
+	return context.WithValue(ctx, key, value)
+}
+
+func GetContextValue(ctx context.Context, key string) interface{} {
+	return ctx.Value(key)
+}

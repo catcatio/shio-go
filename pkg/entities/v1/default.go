@@ -99,9 +99,15 @@ type UserProfile struct {
 	PictureUrl  string `json:"picture_url"`
 }
 
+type OutgoingEventType string
+
+const (
+	OutgoingEventTypeMessage OutgoingEventType = "message"
+)
+
 type OutgoingEvent struct {
-	RequestID       string           `json:"request_id"`
-	ChannelID       string           `json:"channel_id"`
-	Type            string           `json:"type"`
-	OutgoingMessage *OutgoingMessage `json:"outgoing_message,omitempty"`
+	RequestID       string            `json:"request_id"`
+	ChannelID       string            `json:"channel_id"`
+	Type            OutgoingEventType `json:"type"`
+	OutgoingMessage *OutgoingMessage  `json:"outgoing_message,omitempty"`
 }

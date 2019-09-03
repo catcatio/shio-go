@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
+	entities2 "github.com/catcatio/shio-go/svcs/chat/entities"
 )
 
 type FulfillmentRepository interface {
@@ -11,17 +12,18 @@ type FulfillmentRepository interface {
 }
 
 type fulfillmentRepository struct {
-	channelConfigRepo ChannelConfigRepository
 }
 
-func NewFulfillmentRepository(channelConfigRepo ChannelConfigRepository) FulfillmentRepository {
-	return &fulfillmentRepository{channelConfigRepo: channelConfigRepo}
+func NewFulfillmentRepository() FulfillmentRepository {
+	return &fulfillmentRepository{}
 }
 
 func (f *fulfillmentRepository) ResolveFulfillment(ctx context.Context, input *entities.IncomingEvent) (*entities.Fulfillment, error) {
-	channelConfig, err := f.channelConfigRepo.Get(ctx, input.ChannelID)
-	if err != nil {
-		return nil, err
+	var channelConfig entities2.ChannelConfig
+	if config, ok := ctx.Value("channel_config").(entities2.ChannelConfig); !ok {
+		return nil, ErrChannelConfigNotSet
+	} else {
+		channelConfig = config
 	}
 
 	fmt.Println(input.Intent)

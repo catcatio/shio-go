@@ -2,10 +2,8 @@ package usecases
 
 import (
 	"context"
-	"fmt"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
 	"github.com/catcatio/shio-go/svcs/chat/repositories"
-	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/octofoxio/foundation/logger"
 )
 
@@ -14,25 +12,16 @@ type OutgoingEventUsecase interface {
 }
 
 type outgoingEventUsecase struct {
-	channelConfigRepo repositories.ChannelConfigRepository
-	pubsubRepo        repositories.PubsubChannelRepository
-	log               *logger.Logger
+	outgoingRepo repositories.OutgoingRepository
+	log          *logger.Logger
 }
 
 func (s *outgoingEventUsecase) Handle(ctx context.Context, input *entities.OutgoingEvent) error {
 	log := s.log.WithServiceInfo("Handle")
-	channelConfig, err := s.channelConfigRepo.Get(ctx, input.ChannelID)
 
+	err := s.outgoingRepo.Handler(ctx, input)
 	if err != nil {
-		log.WithError(err).WithField("channelID", input.ChannelID).Error("unable to get channel options")
-		return err
-	}
-
-	// assume event message and line
-	bot, _ := linebot.New(channelConfig.LineChatOptions.ChannelSecret, channelConfig.LineChatOptions.ChannelAccessToken)
-	_, err = bot.ReplyMessage(input.OutgoingMessage.ReplyToken, linebot.NewTextMessage(fmt.Sprintf("%v", input.OutgoingMessage.Payload))).Do()
-
-	if err != nil {
+		log.WithError(err).WithField("channelID", input.ChannelID).Error("handle event failed")
 		return err
 	}
 
@@ -40,10 +29,9 @@ func (s *outgoingEventUsecase) Handle(ctx context.Context, input *entities.Outgo
 
 }
 
-func NewOutgoingEventUsecase(channelConfigRepo repositories.ChannelConfigRepository, pubsubRepo repositories.PubsubChannelRepository) OutgoingEventUsecase {
+func NewOutgoingEventUsecase(outgoingRepo repositories.OutgoingRepository) OutgoingEventUsecase {
 	return &outgoingEventUsecase{
-		channelConfigRepo: channelConfigRepo,
-		pubsubRepo:        pubsubRepo,
-		log:               logger.New("OutgoingEventUsecase"),
+		outgoingRepo: outgoingRepo,
+		log:          logger.New("OutgoingEventUsecase"),
 	}
 }

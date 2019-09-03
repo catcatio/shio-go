@@ -4,6 +4,7 @@ import (
 	"context"
 	entities2 "github.com/catcatio/shio-go/pkg/entities/v1"
 	"github.com/catcatio/shio-go/svcs/chat/entities"
+	"github.com/catcatio/shio-go/svcs/chat/repositories"
 	"github.com/catcatio/shio-go/svcs/chat/usecases"
 	"net/http"
 )
@@ -22,12 +23,12 @@ var (
 	ParamProvider  = "provider"
 )
 
-func New(incomingEvent usecases.IncomingEventUsecase) *Endpoints {
+func New(incomingEvent usecases.IncomingEventUsecase, channelConfigRepo repositories.ChannelConfigRepository) *Endpoints {
 	handlers := make(ProviderEndpointHandlers)
 	handlers[entities2.ProviderTypeLine.String()] = newLineEndpointFunc(incomingEvent)
 
 	return &Endpoints{
-		Webhook: newWebhookEndpoint(incomingEvent, handlers),
+		Webhook: newWebhookEndpoint(channelConfigRepo, handlers),
 		Ping:    newPingEndpoint(),
 	}
 }

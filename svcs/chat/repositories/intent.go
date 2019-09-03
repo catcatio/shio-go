@@ -15,6 +15,7 @@ import (
 
 var (
 	ErrMessageTypeNotSupported = errors.New("message type not supported")
+	ErrChannelConfigNotSet     = errors.New("channel config not set")
 	ErrInvalidConfig           = errors.New("invalid configuration")
 )
 
@@ -24,13 +25,11 @@ type IntentRepository interface {
 }
 
 type intentRepository struct {
-	channelConfigRepo      ChannelConfigRepository
 	intentDetectorProvider IntentDetectorProvider
 }
 
-func NewIntentRepository(channelConfigRepo ChannelConfigRepository) IntentRepository {
+func NewIntentRepository() IntentRepository {
 	intent := &intentRepository{
-		channelConfigRepo:      channelConfigRepo,
 		intentDetectorProvider: newIntentDetectorProvider(),
 	}
 
@@ -43,16 +42,19 @@ func (i *intentRepository) AddDetector(detector IntentDetector) {
 }
 
 func (i *intentRepository) Detect(ctx context.Context, event *entities.IncomingEvent) (*entities.Intent, error) {
-	channelConfig, err := i.channelConfigRepo.Get(ctx, event.ChannelID)
-	if err != nil {
-		return nil, err
+	var channelConfig entities2.ChannelConfig
+	if config, ok := ctx.Value("channel_config").(entities2.ChannelConfig); !ok {
+		return nil, ErrChannelConfigNotSet
+	} else {
+		channelConfig = config
 	}
+
 	detector, err := i.intentDetectorProvider.Get(channelConfig.IntentDetector)
 
 	if err != nil {
 		return nil, err
 	}
-	return detector.Detect(ctx, channelConfig, event)
+	return detector.Detect(ctx, &channelConfig, event)
 }
 
 type IntentDetectorProvider interface {

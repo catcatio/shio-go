@@ -3,13 +3,13 @@ package endpoints
 import (
 	"github.com/catcatio/shio-go/nub"
 	shio "github.com/catcatio/shio-go/pkg"
-	"github.com/catcatio/shio-go/svcs/chat/usecases"
+	"github.com/catcatio/shio-go/svcs/chat/repositories"
 	"github.com/gorilla/mux"
 	"github.com/octofoxio/foundation/logger"
 	"net/http"
 )
 
-func newWebhookEndpoint(incomingEvent usecases.IncomingEventUsecase, handlers ProviderEndpointHandlers) EndpointFunc {
+func newWebhookEndpoint(channelConfigRepo repositories.ChannelConfigRepository, handlers ProviderEndpointHandlers) EndpointFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		requestID := nub.NewID()
 		log := logger.New("WebhookEndpoint").WithServiceInfo("handler").WithRequestID(requestID)
@@ -38,13 +38,14 @@ func newWebhookEndpoint(incomingEvent usecases.IncomingEventUsecase, handlers Pr
 
 		ctx := shio.NewContextWithRequestID(requestID)
 		log.Info("getting channel config")
-		channelConfig, err := incomingEvent.GetChannelConfig(ctx, channelID)
-
+		channelConfig, err := channelConfigRepo.Get(ctx, channelID)
 		if err != nil {
 			log.WithError(err).Error("get channel config failed")
 			writeNotFoundResponse(w)
 			return
 		}
+
+		ctx = shio.PutContextValue(ctx, "channel_config", *channelConfig)
 
 		log.Info("handling request config")
 		handler(ctx, channelConfig, w, r)

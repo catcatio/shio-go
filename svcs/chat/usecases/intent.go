@@ -2,9 +2,12 @@ package usecases
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	shio "github.com/catcatio/shio-go/pkg"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
 	"github.com/catcatio/shio-go/svcs/chat/repositories"
+	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/octofoxio/foundation/logger"
 )
 
@@ -13,18 +16,16 @@ type IntentUsecase interface {
 }
 
 type intentUsecase struct {
-	channelConfigRepo repositories.ChannelConfigRepository
-	intentRepo        repositories.IntentRepository
-	pubsubRepo        repositories.PubsubChannelRepository
-	log               *logger.Logger
+	intentRepo repositories.IntentRepository
+	pubsubRepo repositories.PubsubChannelRepository
+	log        *logger.Logger
 }
 
-func NewIntentUsecase(channelConfigRepo repositories.ChannelConfigRepository, intentRepo repositories.IntentRepository, pubsubRepo repositories.PubsubChannelRepository) IntentUsecase {
+func NewIntentUsecase(intentRepo repositories.IntentRepository, pubsubRepo repositories.PubsubChannelRepository) IntentUsecase {
 	return &intentUsecase{
-		channelConfigRepo: channelConfigRepo,
-		intentRepo:        intentRepo,
-		pubsubRepo:        pubsubRepo,
-		log:               logger.New("IntentUsecase"),
+		intentRepo: intentRepo,
+		pubsubRepo: pubsubRepo,
+		log:        logger.New("IntentUsecase"),
 	}
 }
 
@@ -45,6 +46,28 @@ func (i *intentUsecase) HandleEvents(ctx context.Context, in *entities.IncomingE
 	if err != nil {
 		log.WithError(err).Error("publish fulfillment failed")
 		return err
+	}
+
+	if intent.FulfillmentText != "" {
+
+		msg := linebot.TextMessage{
+			Text: intent.FulfillmentText,
+		}
+		b, _ := json.Marshal([]linebot.Message{&msg})
+
+		e := i.pubsubRepo.PublishOutgoingEventInput(ctx, &entities.OutgoingEvent{
+			RequestID: in.RequestID,
+			ChannelID: in.ChannelID,
+			Type:      entities.OutgoingEventTypeMessage,
+			OutgoingMessage: &entities.OutgoingMessage{
+				ReplyToken:  in.ReplyToken,
+				Provider:    in.Provider,
+				RecipientID: in.Source.GetSourceID(),
+				PayloadJson: string(b),
+			},
+		})
+
+		fmt.Println(e)
 	}
 
 	return nil
