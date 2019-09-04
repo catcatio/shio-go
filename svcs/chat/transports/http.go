@@ -13,6 +13,8 @@ func NewHttpServer(eps *endpoints.Endpoints) http.Handler {
 	m.Use(middleware.DoneWriterMiddleware)
 	m.HandleFunc(fmt.Sprintf("/chat/{%s}/{%s}", endpoints.ParamProvider, endpoints.ParamChannelID), eps.Webhook).
 		Methods("POST")
+	m.HandleFunc(fmt.Sprintf("/outgoing/{%s}", endpoints.ParamChannelID), eps.Outgoing).
+		Methods("POST")
 	m.HandleFunc("/_ping", eps.Ping).
 		Methods("GET")
 

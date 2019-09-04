@@ -21,7 +21,9 @@ func NewFulfillmentPubsubEndpoint(fulfillment usecases.FulfillmentUsecase, chann
 			return err
 		}
 
+		log = log.WithRequestID(input.RequestID)
 		ctx = shio.AppendRequestIDToContext(ctx, input.RequestID)
+		log.Infof("getting channel config %s", input.ChannelID)
 		channelConfig, err := channelConfigRepo.Get(ctx, input.ChannelID)
 		if err != nil {
 			log.WithError(err).Error("get channel config failed")

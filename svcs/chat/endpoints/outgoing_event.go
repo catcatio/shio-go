@@ -16,9 +16,8 @@ type PubsubMessageHandlers map[string]PubsubMessageHandler
 type PubsubMessageHandler func(ctx context.Context, m pubsub.RawPubsubMessage) error
 
 func NewOutgoingEventPubsubEndpoint(outgoingEvent usecases.OutgoingEventUsecase, channelConfigRepo repositories.ChannelConfigRepository) PubsubMessageHandler {
-	log := logger.New("OutgoingEvent")
 	return func(ctx context.Context, m pubsub.RawPubsubMessage) error {
-
+		log := logger.New("OutgoingEvent").WithServiceInfo("handler")
 		if m.Data == nil {
 			err := fmt.Errorf("data is nil")
 			log.WithError(err).Error("handle pubsub failed")
@@ -26,13 +25,14 @@ func NewOutgoingEventPubsubEndpoint(outgoingEvent usecases.OutgoingEventUsecase,
 		}
 
 		input := new(entities.OutgoingEvent)
-
 		if err := json.Unmarshal(m.Data, input); err != nil {
 			log.WithError(err).WithField("data", string(m.Data)).Error("unmarshal data failed")
 			return err
 		}
 
+		log = log.WithRequestID(input.RequestID)
 		ctx = shio.AppendRequestIDToContext(ctx, input.RequestID)
+		log.Infof("getting channel config %s", input.ChannelID)
 		channelConfig, err := channelConfigRepo.Get(ctx, input.ChannelID)
 		if err != nil {
 			log.WithError(err).Error("get channel config failed")
@@ -40,9 +40,6 @@ func NewOutgoingEventPubsubEndpoint(outgoingEvent usecases.OutgoingEventUsecase,
 		}
 
 		ctx = shio.PutContextValue(ctx, "channel_config", *channelConfig)
-
-		log.Println(input)
-
 		return outgoingEvent.Handle(ctx, input)
 	}
 }

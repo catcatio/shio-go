@@ -1,10 +1,13 @@
 package repositories
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/catcatio/shio-go/pkg/entities/v1"
 	entities2 "github.com/catcatio/shio-go/svcs/chat/entities"
+	"net/http"
 )
 
 type FulfillmentRepository interface {
@@ -27,13 +30,31 @@ func (f *fulfillmentRepository) ResolveFulfillment(ctx context.Context, input *e
 	}
 
 	fmt.Println(input.Intent)
-
 	fmt.Println(channelConfig.FulfillmentOptions.Endpoint)
 
-	return &entities.Fulfillment{
-		Name: "dummy",
-		Parameters: entities.Parameters{
-			"yes": "no",
-		},
-	}, nil
+	b, err := json.Marshal(input)
+	buf := bytes.NewBuffer(b)
+
+	req, err := http.NewRequest("POST", channelConfig.FulfillmentOptions.Endpoint, buf)
+
+	if err != nil {
+		panic(err)
+	}
+
+	httpClient := http.DefaultClient
+
+	if ctx != nil {
+		_, err := httpClient.Do(req.WithContext(ctx))
+		if err != nil {
+			select {
+			case <-ctx.Done():
+				err = ctx.Err()
+			default:
+			}
+		}
+
+		return nil, err
+	}
+	_, err = httpClient.Do(req)
+	return nil, err
 }

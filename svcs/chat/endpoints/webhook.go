@@ -37,7 +37,7 @@ func newWebhookEndpoint(channelConfigRepo repositories.ChannelConfigRepository, 
 		}
 
 		ctx := shio.NewContextWithRequestID(requestID)
-		log.Info("getting channel config")
+		log.Infof("getting channel config %s", channelID)
 		channelConfig, err := channelConfigRepo.Get(ctx, channelID)
 		if err != nil {
 			log.WithError(err).Error("get channel config failed")

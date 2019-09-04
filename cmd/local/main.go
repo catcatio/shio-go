@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	datastore2 "cloud.google.com/go/datastore"
 	pubsub3 "cloud.google.com/go/pubsub"
 	"context"
@@ -159,6 +160,16 @@ func makeEndpoints(httpHandler http.Handler, pubsubHttpHandler func(http.Respons
 	}
 
 	m.HandleFunc("/pubsub/{topic}", pubsubHttpHandler)
+	m.HandleFunc("/fulfillment/{channel_id}", func(writer http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		channelID := params["channel_id"]
+
+		buf := new(bytes.Buffer)
+		_, _ = buf.ReadFrom(r.Body)
+		body := buf.String()
+		fmt.Printf("thank god: %s\n", channelID)
+		fmt.Println(body)
+	})
 
 	return m
 }

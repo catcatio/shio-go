@@ -15,7 +15,7 @@ func NewWebhookHandler(options *kernel.ServiceOptions) http.Handler {
 	channelConfig := repositories.NewChannelConfigRepository(options.DatastoreClient)
 
 	chat := usecases.NewIncomingEventUsecase(channelConfig, pubsubRepo)
-	eps := endpoints.New(chat, channelConfig)
+	eps := endpoints.New(chat, channelConfig, pubsubRepo)
 	httpHandler := transports.NewHttpServer(eps)
 	return httpHandler
 }
