@@ -9,21 +9,18 @@ import (
 )
 
 type IncomingEventUsecase interface {
-	GetChannelConfig(ctx context.Context, channelID string) (*entities.ChannelConfig, error)
 	HandleEvents(ctx context.Context, in *entities.WebhookInput) (err error)
 }
 
 type incomingEventUsecase struct {
-	channelConfigRepo repositories.ChannelConfigRepository
-	pubsubRepo        repositories.PubsubChannelRepository
-	log               *logger.Logger
+	pubsubRepo repositories.PubsubChannelRepository
+	log        *logger.Logger
 }
 
-func NewIncomingEventUsecase(channelConfigRepo repositories.ChannelConfigRepository, pubsubRepo repositories.PubsubChannelRepository) IncomingEventUsecase {
+func NewIncomingEventUsecase(pubsubRepo repositories.PubsubChannelRepository) IncomingEventUsecase {
 	return &incomingEventUsecase{
-		channelConfigRepo: channelConfigRepo,
-		pubsubRepo:        pubsubRepo,
-		log:               logger.New("IncomingEvent"),
+		pubsubRepo: pubsubRepo,
+		log:        logger.New("IncomingEvent"),
 	}
 }
 
@@ -41,8 +38,4 @@ func (i *incomingEventUsecase) HandleEvents(ctx context.Context, in *entities.We
 	}
 
 	return
-}
-
-func (i *incomingEventUsecase) GetChannelConfig(ctx context.Context, channelID string) (*entities.ChannelConfig, error) {
-	return i.channelConfigRepo.Get(ctx, channelID)
 }

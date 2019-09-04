@@ -25,7 +25,8 @@ type IntentRepository interface {
 }
 
 type intentRepository struct {
-	intentDetectorProvider IntentDetectorProvider
+	pubsubChannelRepository PubsubChannelRepository
+	intentDetectorProvider  IntentDetectorProvider
 }
 
 func NewIntentRepository() IntentRepository {
@@ -33,6 +34,7 @@ func NewIntentRepository() IntentRepository {
 		intentDetectorProvider: newIntentDetectorProvider(),
 	}
 
+	// to add other provider here
 	intent.AddDetector(NewDialogflowIntentDetector())
 	return intent
 }
@@ -115,7 +117,7 @@ func (d *dialogflowIntentDetector) Detect(ctx context.Context, channelConfig *en
 	dfConfig := channelConfig.DialogflowOptions
 
 	credentialsJson := strings.Trim(dfConfig.CredentialsJson, `"`)
-	credentialsJson = strings.ReplaceAll(credentialsJson, `'`, `"`)
+	credentialsJson = strings.Replace(credentialsJson, `'`, `"`, -1) // use string.Replace for the sake of go 1.11 in gcf
 
 	opts := option.WithCredentialsJSON([]byte(credentialsJson))
 	client, err := dialogflow.NewSessionsClient(ctx, opts)

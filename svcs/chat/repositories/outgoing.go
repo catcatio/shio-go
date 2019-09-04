@@ -33,6 +33,7 @@ func (o *outgoingRepo) Handler(ctx context.Context, event *entities.OutgoingEven
 
 	switch event.Type {
 	case entities.OutgoingEventTypeMessage:
+		// assume line for now
 		client := outgoing_handler.NewLineClient(
 			channelConfig.LineChatOptions.ChannelSecret,
 			channelConfig.LineChatOptions.ChannelAccessToken,
